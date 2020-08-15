@@ -7,7 +7,7 @@ tags: Android
 
 首先一个很重要的一点，google在Android8以后加入了通知渠道功能，可以方便用户更好的管控通知类型。
 
-# **带`NotificationChannel`的使用方法如下**
+# **带NotificationChannel的使用方法如下**
 
 ```java
 //拿到NotificationManager对象，因为是在fragment中写的需要getContext，
@@ -71,7 +71,7 @@ Notification mBuilder = builder.build();
      
 ```
 # 使用自定义的notify
-![显示出来的自定义通知](phcbest.github.io\_posts\2020-08-15-android使用Notify的一些笔记.assets\20200615233210489.png)
+
 使用自定义的notify比较容易，只需要对一个对象有所了解，`RemoteViews()翻译为远程视图`
 **RemoteViews 这个对象与其他的view不同没有继承view而是继承于parcelable，这是一个可以跨进程显示view的类，一般用于自定义离开app页面的相关视图，如桌面小部件，通知**
 
