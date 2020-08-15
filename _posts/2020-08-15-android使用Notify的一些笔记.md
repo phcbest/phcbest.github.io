@@ -71,7 +71,7 @@ Notification mBuilder = builder.build();
      
 ```
 # 使用自定义的notify
-![显示出来的自定义通知](E:\GitHub\phcbest.github.io\_posts\2020-08-15-android使用Notify的一些笔记.assets\20200615233210489.png)
+![显示出来的自定义通知](phcbest.github.io\_posts\2020-08-15-android使用Notify的一些笔记.assets\20200615233210489.png)
 使用自定义的notify比较容易，只需要对一个对象有所了解，`RemoteViews()翻译为远程视图`
 **RemoteViews 这个对象与其他的view不同没有继承view而是继承于parcelable，这是一个可以跨进程显示view的类，一般用于自定义离开app页面的相关视图，如桌面小部件，通知**
 
