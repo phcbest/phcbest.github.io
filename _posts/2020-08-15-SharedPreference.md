@@ -1,3 +1,10 @@
+---
+title: SharedPreference
+tags: Android
+---
+
+
+
 # SharedPreference
 
 写入

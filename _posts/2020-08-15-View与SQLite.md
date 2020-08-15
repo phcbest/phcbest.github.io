@@ -1,3 +1,8 @@
+---
+title: view通过sqlite进行数据填充
+tags: Android
+---
+
 # view通过sqlite进行数据填充
 
 这次的项目主要是有适配器和数据库和listview操作。
