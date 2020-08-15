@@ -1,0 +1,598 @@
+[toc]
+
+# Adapter的使用
+
+适配器在Android编程中经常用到，我记录以下我学习BaseAdapter的过程
+
+
+
+## BaseAdapter
+
+创建三个java类，一个是主要的活动类，一个是数据类，一个是适配器类
+
+1. 数据类中需要填入所需的变量
+
+   ```java
+   package com.phc.a1801_penghaicen_listview;
+   
+   /**
+    * @author PengHaiChen
+    */
+   //该类代表人员信息
+   public  class Person {
+       int image;
+       String name;
+       String sex;
+       String class_;
+   	String classRome;
+   
+       public void setImage(int image) {
+           this.image = image;
+       }
+   
+       public void setName(String name) {
+           this.name = name;
+       }
+   
+       public void setSex(String sex) {
+           this.sex = sex;
+       }
+   
+       public void setClass_(String class_) {
+           this.class_ = class_;
+       }
+   
+       public void setClassRome(String classRome) {
+           this.classRome = classRome;
+       }
+   
+       public int getImage() {
+           return image;
+       }
+   
+       public String getName() {
+           return name;
+       }
+   
+       public String getSex() {
+           return sex;
+       }
+   
+       public String getClass_() {
+           return class_;
+       }
+   
+       public String getClassRome() {
+           return classRome;
+       }
+   
+       public Person(int image, String name, String sex, String class_, String classRome) {
+           this.image = image;
+           this.name = name;
+           this.sex = sex;
+           this.class_ = class_;
+           this.classRome = classRome;
+       }
+   
+       
+   }
+   ```
+
+
+2. 适配器中的代码 
+   
+   ``` java
+   package com.phc.a1801_penghaicen_listview;
+   
+   import android.content.Context;
+   import android.view.LayoutInflater;
+   import android.view.View;
+   import android.view.ViewGroup;
+   import android.widget.BaseAdapter;
+   import android.widget.ImageView;
+   import android.widget.TextView;
+   
+   import java.util.List;
+   
+   /**佛曰适配器,既非适配器,是名适配器
+    * 这里需要完成将传递进来的参数给适配进组件中
+    * @author PengHaiChen
+    */
+   public class myBaseAdapter extends BaseAdapter {
+   
+       List<Person> list;
+       Context context;
+   
+       //构造方法,将传递进来的参数变为该方法的全局变量
+       public myBaseAdapter (Context context, List<Person> list){
+           this.list=list;
+           this.context =context;
+       }
+   
+       @Override
+       public int getCount() {
+           return list.size();
+       }
+   
+       @Override
+       public Object getItem(int position) {
+           return list.get(position);
+       }
+   
+       @Override
+       public long getItemId(int position) {
+           return position;
+       }
+   
+       @Override
+       public View getView(int position, View convertView, ViewGroup parent) {
+           //这里进行填充操作
+           ViewHold vh;
+   
+           //如果需要改造的视图是空的
+           if (convertView==null){
+               //填充自定义的xml
+               convertView = LayoutInflater.from(context).inflate(R.layout.list_content_test, null);
+               //创建对象
+               vh=new ViewHold();
+               //将组件赋值给vh中的变量
+               vh.img=(ImageView)convertView.findViewById(R.id.list_image);
+               vh.name=(TextView)convertView.findViewById(R.id.name);
+               vh.sex=(TextView)convertView.findViewById(R.id.sex);
+               vh.class_=(TextView)convertView.findViewById(R.id.class_);
+               vh.ClassRoom=(TextView)convertView.findViewById(R.id.classRoom);
+               convertView.setTag(vh);
+           }else {
+               vh=(ViewHold) convertView.getTag();
+           }
+           //将数组中对应位置的元素资源设置好
+           vh.img.setImageResource(list.get(position).image);
+           vh.name.setText(list.get(position).name);
+           vh.sex.setText(list.get(position).sex);
+           vh.class_.setText(list.get(position).class_);
+           vh.ClassRoom.setText(list.get(position).classRome);
+           //返回视图
+           return convertView;
+       }
+   
+       //该类代表了所有要用到的对象
+       static class ViewHold{
+           ImageView img;
+           TextView name,sex,class_,ClassRoom;
+       }
+   
+   }
+   ```
+
+
+
+3. 最后在主类中调用
+   
+   ```java
+   package com.phc.a1801_penghaicen_listview;
+   
+   import androidx.appcompat.app.AppCompatActivity;
+   
+   import android.app.Activity;
+   import android.content.Context;
+   import android.content.Intent;
+   import android.media.Image;
+   import android.os.BaseBundle;
+   import android.os.Bundle;
+   import android.view.LayoutInflater;
+   import android.view.View;
+   import android.view.ViewGroup;
+   import android.widget.BaseAdapter;
+   import android.widget.ImageView;
+   import android.widget.LinearLayout;
+   import android.widget.ListAdapter;
+   import android.widget.ListView;
+   import android.widget.TextView;
+   
+   import java.util.ArrayList;
+   import java.util.HashMap;
+   import java.util.List;
+   import java.util.Map;
+   
+   /**
+    *
+    * @author PengHaiChen
+    */
+   //修改继承去除顶部栏
+   public class MainActivity extends Activity {
+       private ListView listView;
+       myBaseAdapter myBaseAdapter;
+       List <Person>personList =new ArrayList<>();
+       Person person;
+       @Override
+       protected void onCreate(Bundle savedInstanceState) {
+           super.onCreate(savedInstanceState);
+           setContentView(R.layout.activity_main);
+           //我需要在这里调用适配器方法,然后给参数给适配器
+           initView();
+           for (int i = 0; i < 20; i++) {
+               person = new Person(0,"流缠子"+(i+1),"女","打架部","7#425");
+               person.setImage(R.drawable.image);
+               personList.add(person);
+           }
+           myBaseAdapter=new myBaseAdapter(this,personList);
+           listView.setAdapter(myBaseAdapter);
+       }
+       private void initView(){
+           listView=(ListView)findViewById(R.id.listView);
+       }
+   }
+   ```
+   
+   > BaseAdapter 还有一种需要设置不同的参数的是否可以尝试以下的方法
+   
+   1. 适配器
+   
+   ``` java
+   package com.phc.a2020_3_17;
+   
+   import android.content.Context;
+   import android.view.LayoutInflater;
+   import android.view.View;
+   import android.view.ViewGroup;
+   import android.widget.BaseAdapter;
+   import android.widget.TextView;
+   
+   import java.util.List;
+   import java.util.Map;
+   
+   public class myAdapter extends BaseAdapter {
+   
+       List<Map<String,Object>> datas;
+       Context context;
+       module md;
+   
+       public myAdapter(List<Map<String, Object>> datas, Context context) {
+           this.datas = datas;
+           this.context = context;
+       }
+   
+       @Override
+       public int getCount() {
+           return datas.size();
+       }
+   
+       @Override
+       public Object getItem(int position) {
+           return datas.get(position);
+       }
+   
+       @Override
+       public long getItemId(int position) {
+           return position;
+       }
+   
+       @Override
+       public View getView(int position, View convertView, ViewGroup parent) {
+           if (convertView==null){
+               convertView= LayoutInflater.from(context).inflate(R.layout.grid_view_content,null);
+               md=new module();
+               md.name=(TextView) convertView.findViewById(R.id.descriptionText);
+               md.number=(TextView)convertView.findViewById(R.id.number);
+               convertView.setTag(md);
+           }else {
+               md = (module) convertView.getTag();
+           }
+           md.name.setText(datas.get(position).get("name").toString());
+           md.number.setText(datas.get(position).get("number").toString());
+           return convertView;
+       }
+       public class module{
+           TextView name,number;
+       }
+   }
+   ```
+   
+   
+   2. 调用方法
+   
+   
+      ```java
+      package com.phc.a2020_3_17;
+      
+      import androidx.appcompat.app.AppCompatActivity;
+      
+      import android.app.Activity;
+      import android.os.Bundle;
+      import android.view.WindowManager;
+      import android.widget.GridLayout;
+      import android.widget.GridView;
+      
+      import java.util.ArrayList;
+      import java.util.HashMap;
+      import java.util.List;
+      import java.util.Map;
+      
+      public class MainActivity extends Activity {
+          GridView gridView;
+          myAdapter adapter;
+          List<Map<String,Object>> data=new ArrayList<>();
+      
+          @Override
+          protected void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              setContentView(R.layout.activity_main);
+              //关闭状态栏
+              getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+              //调用数据方法的空参构造
+              initData();
+              //调用组件
+              gridView=(GridView)findViewById(R.id.gridView);
+              //调用适配器方法
+              adapter=new myAdapter(data,this);
+              //将适配器设置给组件
+              gridView.setAdapter(adapter);
+      
+          }
+          //自定义数据类
+          private void initData(){
+              Map<String,Object> map = new HashMap<>();
+              map.put("name","温度");
+              map.put("number","30");
+              data.add(map);
+              map = new HashMap<>();
+              map.put("name","湿度");
+              map.put("number","47");
+              data.add(map);
+              map = new HashMap<>();
+              map.put("name","光照");
+              map.put("number","30");
+              data.add(map);
+              map = new HashMap<>();
+              map.put("name","CQ2");
+              map.put("number","12");
+              data.add(map);
+              map = new HashMap<>();
+              map.put("name","PM2.5");
+              map.put("number","2.3");
+              data.add(map);
+              map = new HashMap<>();
+              map.put("name","道路状况");
+              map.put("number","良好");
+              data.add(map);
+          }
+      }
+      ```
+
+
+
+
+
+## BaseExpandableListAdapter
+
+> 因为可展开式的listview需要每个参数都不一样，所以不需要数据类，可以直接将参数传导进入适配器，主要方法有两个
+
+1. 适配器方法
+
+   ``` java
+   package com.phc.expandablelistview;
+   
+   import android.content.Context;
+   import android.content.Intent;
+   import android.util.Log;
+   import android.view.LayoutInflater;
+   import android.view.View;
+   import android.view.ViewGroup;
+   import android.widget.BaseAdapter;
+   import android.widget.BaseExpandableListAdapter;
+   import android.widget.Button;
+   import android.widget.ImageView;
+   import android.widget.TextView;
+   
+   import java.util.List;
+   import java.util.Map;
+   
+   import javax.xml.namespace.QName;
+   
+   /**
+    * @author PengHaiChen
+    */
+   public class expandableAdapter extends BaseExpandableListAdapter {
+       //这书需要传递你进来的参数类型
+       List <Map<String,Object>> anime;
+       //创建二维数组
+       String[][] character;
+       //创建上下文关系
+       Context context;
+   
+       //构造方法用于传递参数
+       public expandableAdapter(List<Map<String, Object>> anime, String[][] character, Context context) {
+           this.anime = anime;
+           this.character = character;
+           this.context = context;
+           Log.d("hello" ,"expandableAdapter"+character.toString());
+       }
+   
+       //组件类
+       public  class module{
+           ImageView manga_image;
+           TextView manga_name,manga_time,manga_faction,figure_name;
+   
+       }
+   
+   
+       //父布局数量
+       @Override
+       public int getGroupCount() {
+           //返回集合的长度
+           return anime.size();
+       }
+   
+       //子项目数量
+       @Override
+       public int getChildrenCount(int groupPosition) {
+           //返回二维数组的长度
+           return character[groupPosition].length;
+       }
+   
+       //父布局根据位置获得对象
+       @Override
+       public Object getGroup(int groupPosition) {
+           return anime.get(groupPosition);
+       }
+   
+       //子布局根据位置获得对象
+       @Override
+       public Object getChild(int groupPosition, int childPosition) {
+           return character[groupPosition][childPosition];
+       }
+       //获取父布局id
+       @Override
+       public long getGroupId(int groupPosition) {
+           return groupPosition;
+       }
+   //    获取子布局id
+       @Override
+       public long getChildId(int groupPosition, int childPosition) {
+           return childPosition;
+       }
+       //是否有稳定的id
+       @Override
+       public boolean hasStableIds() {
+           return true;
+       }
+       //适配父布局
+       @Override
+       public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+           //如果视图是空的
+           if (convertView==null){
+   //            给一个视图
+               convertView= LayoutInflater.from(context).inflate(R.layout.expandable_listview_son,null);
+           }
+           //创建组件对象
+           module md=new module();
+           //绑定组件
+           md.manga_image=(ImageView) convertView.findViewById(R.id.mangaImage);
+           md.manga_name=(TextView)convertView.findViewById(R.id.mangaName);
+           md.manga_time=(TextView)convertView.findViewById(R.id.mangaTime);
+           md.manga_faction=(TextView)convertView.findViewById(R.id.mangaFaction);
+   
+           
+           //设置元素内容 groupPosition代表位置
+           md.manga_image.setImageResource((Integer)anime.get(groupPosition).get("manga_image"));
+           md.manga_name.setText(anime.get(groupPosition).get("manga_name").toString());
+           md.manga_time.setText(anime.get(groupPosition).get("manga_time").toString());
+           md.manga_faction.setText(anime.get(groupPosition).get("manga_faction").toString());
+           //设置一下缓冲区
+           convertView.setTag(md);
+           return convertView;
+       }
+       //设置子视图
+       @Override
+       public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+           if (convertView==null){
+               convertView=LayoutInflater.from(context).inflate(R.layout.expandable_listview_content,null);
+           }
+           //调用组件对象
+           module md=new module();
+           //绑定组件
+           md.figure_name=(TextView)convertView.findViewById(R.id.figureName);
+           //给组件参数
+           md.figure_name.setText(character[groupPosition][childPosition]);
+           return convertView;
+       }
+   
+       @Override
+       public boolean isChildSelectable(int groupPosition, int childPosition) {
+           return true;
+       }
+   
+   
+   
+   }
+   ```
+
+
+   2. 调用适配器
+
+      ```java
+      package com.phc.expandablelistview;
+      
+      import androidx.appcompat.app.AppCompatActivity;
+      
+      import android.os.Bundle;
+      import android.util.Log;
+      import android.view.View;
+      import android.widget.ExpandableListView;
+      import android.widget.Toast;
+      
+      import java.util.ArrayList;
+      import java.util.HashMap;
+      import java.util.List;
+      import java.util.Map;
+      
+      public class MainActivity extends AppCompatActivity {
+      
+          //创建自定义适配器对象
+          expandableAdapter expandableAdapterView;
+          //创建展开清单对象
+          ExpandableListView expandableListView;
+          //创建集合 用于保存数据
+          List<Map<String,Object>> data;
+          //添加番剧图片
+          int [] manga_image={R.drawable.daytodat,R.drawable.dororo,R.drawable.jojo,R.drawable.klk,R.drawable.spiritdie};
+          //添加数据,番剧名字
+          String[] manga_name={"日常","多罗罗","jojo的奇妙冒险","斩服少女","鬼灭之刃"};
+          //添加番剧时间
+          String[] manga_time={"2020年2月2号","1999年9月9号","2013年3月3号","2014年4月4号","2020年1月1号"};
+          //番剧评分
+          String[] manga_faction={"4.8","4.7","5.0","5.0","4.6"};
+          //番剧人员表
+          String [][] character;
+      
+          @Override
+          protected void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              setContentView(R.layout.activity_main);
+      
+              //绑定ExpandableListView组件
+              expandableListView=(ExpandableListView) findViewById(R.id.expandablelistview);
+              //调用添加数据的方法
+              init_data();
+              //注入适配器对象
+              expandableAdapterView=new expandableAdapter(data,character,this);
+              //将自定义适配器放入组件中
+              expandableListView.setAdapter(expandableAdapterView);
+              //设置点击事件
+              expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener(){
+                  //重写
+                  @Override
+                  public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                      String animeTips=data.get(groupPosition).get("manga_name")+","+character[groupPosition][childPosition];
+                      Toast.makeText(MainActivity.this, "您选择的人物是是"+animeTips, Toast.LENGTH_SHORT).show();
+                      return false;
+                  }
+              });
+      
+      
+          }
+          //添加数据的方法
+          void init_data(){
+              //注入Arraylist集合对象
+              data=new ArrayList<>();
+              //创建map对象
+              Map map;
+              //循环添加数据
+              for (int i = 0; i < manga_name.length; i++) {
+                  map=new HashMap<String,Object>();
+                  map.put("manga_image",manga_image[i]);
+                  map.put("manga_name",manga_name[i]);
+                  map.put("manga_time",manga_time[i]);
+                  map.put("manga_faction",manga_faction[i]);
+                  //将map中的数据转存在lit中
+                  data.add(map);
+              }
+              //添加人员信息
+              character=new String[][]{{"sakamoto","博士","名乃","麻衣","美绪","祐子"},
+                      {"多罗罗","百鬼丸","宝多丸","和尚"},{"波鲁纳雷夫","乔瑟夫乔斯达","dio","空条承太郎"},
+                      {"流缠子","鲜血","鬼龙院罗晓"},{"弥豆子","碳治郎","虫柱","无惨"}};
+          }
+      }
+        
+      ```
+
