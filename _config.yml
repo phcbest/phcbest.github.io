@@ -73,7 +73,7 @@ paths:
 excerpt_separator: <!--more-->
 
 ## license
-license: CC-BY-NC-4.0 # "CC-BY-4.0", "CC-BY-SA-4.0", "CC-BY-NC-4.0", "CC-BY-ND-4.0"
+license: false # "CC-BY-4.0", "CC-BY-SA-4.0", "CC-BY-NC-4.0", "CC-BY-ND-4.0"
 
 ## TOC
 toc:
@@ -207,7 +207,7 @@ defaults:
     values:
       layout: article
       sharing: true
-      license: false
+      license: true
       aside:
         toc: true
       show_edit_on_github: true
