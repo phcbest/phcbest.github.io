@@ -2,7 +2,7 @@
 
 layout: article
 title: MPAndroidChart的画图方式
-tags: android
+tags: Android
 ---
 
 # MPAndroidChart的画图方式
@@ -220,11 +220,13 @@ study by https://www.cnblogs.com/r-decade/p/6241693.html	https://blog.csdn.net/u
 
 10. 将线对象存入表中
 
-   ```java
-   //保存LineDataSet集合
-   ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-   dataSets.add(set1); // add the datasets
-   ```
+    ```java
+       //保存LineDataSet集合
+       ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+       dataSets.add(set1); // add the datasets
+    ```
+
+    
 
 11. ```java
     //创建LineData对象 属于LineChart折线图的数据集合
