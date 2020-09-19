@@ -1,3 +1,4 @@
+---
 layout: article
 title: View_binding----简单实现组件的依赖注入
 tags: Android
