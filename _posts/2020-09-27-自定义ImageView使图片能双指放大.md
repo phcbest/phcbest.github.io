@@ -4,6 +4,12 @@ title: 自定义ImageView使图片能够双指放大
 
 ---
 
+
+
+# 自定义ImageView使图片能够双指放大
+
+
+
 ```java
 package com.lenovo.smarttraffic.ui.diyImageView;
 
