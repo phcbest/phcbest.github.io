@@ -15,7 +15,7 @@ tags: Android
 
 **主界面**
 
-``` java
+```java
 package com.phc.a2020_03_22;
 
 import androidx.annotation.NonNull;
@@ -298,7 +298,6 @@ public class MainActivity extends AppCompatActivity {
         return adapters_data;
     }
 }
-
 ```
 
 **常量参数**
@@ -320,7 +319,7 @@ public class constants {
 
 **实体类**
 
-``` java
+```java
 package com.phc.a2020_03_22;
 
 public class javaBeanAdapter {
@@ -358,7 +357,6 @@ public class javaBeanAdapter {
         this.money = money;
     }
 }
-
 ```
 
 **适配器方法**
@@ -435,7 +433,6 @@ public class myAdapter extends BaseAdapter {
         return convertView;
     }
 }
-
 ```
 
 **数据库创建**
@@ -484,6 +481,3 @@ public class dataSql extends SQLiteOpenHelper {
     }
 }
 ```
-
-
-
