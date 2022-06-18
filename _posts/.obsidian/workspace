@@ -1,0 +1,96 @@
+{
+  "main": {
+    "id": "fd45c275857d1fd0",
+    "type": "split",
+    "children": [
+      {
+        "id": "0572b802a90f0fef",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "2022-06-18-Android使用Service和MediaSession.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "df58d3b89bd42622",
+    "type": "split",
+    "children": [
+      {
+        "id": "eaa7d0f1795daee4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9ad5cabfa73e0306",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "c88f6196dab23ac2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 217
+  },
+  "right": {
+    "id": "fe3529338cf570ab",
+    "type": "split",
+    "children": [
+      {
+        "id": "abfb5d04bb18d1b4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1004647d23cff003",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "2022-06-18-Android使用Service和MediaSession.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "0572b802a90f0fef",
+  "lastOpenFiles": [
+    "2022-06-18-Android使用Service和MediaSession.md",
+    "2021-12-07-Android与OpenCv结合使用.md",
+    "2022-04-16-Android MVVM实现Demo解析.md"
+  ]
+}

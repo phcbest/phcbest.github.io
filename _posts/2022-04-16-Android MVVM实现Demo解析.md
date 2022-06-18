@@ -8,12 +8,10 @@ tags: Android
 
 [phcbest/MVVM-Demo](https://github.com/phcbest/MVVM-Demo)
 
-
-
 ## 项目依赖版本
 
 ```groovy
-	implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
@@ -50,13 +48,9 @@ project.ext {
 }
 ```
 
-
-
 ## DEMO说明
 
 该demo是一个基于MVVM思想,通过 *Dagger2,LifeCycle,LiveData,DataBinding,Retrofit2* 等开发工具实现,主要的难点是Dagger2的学习和使用,这种基于Kapt的工具有时总是Inject不成功,下面详细描述一下Dagger2的配置过程
-
-
 
 ## Dagger2的配置
 
@@ -67,7 +61,7 @@ di在后端开发中十分常见,对象的实例化由Factory来解决,让开发
 ### 依赖配置
 
 ```groovy
-	kapt "com.google.dagger:dagger-android-processor:$dagger_version"
+    kapt "com.google.dagger:dagger-android-processor:$dagger_version"
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
     implementation "com.google.dagger:dagger:$project.dagger_version"
     implementation "com.google.dagger:dagger-android:$project.dagger_version"
@@ -87,8 +81,6 @@ plugins {
     id 'kotlin-parcelize'
 }
 ```
-
-
 
 ### 清单文件
 
@@ -125,8 +117,6 @@ class MVVMApplication : Application(), HasAndroidInjector {
 
 在该类中,我继承了Application,实现了HasAndroidInjector,Activity也要实现HasAndroidInjector,为了方便实现注入的时候作为标记
 
-
-
 ### MainActivity
 
 ```kotlin
@@ -158,8 +148,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     override fun androidInjector(): AndroidInjector<Any> = dispatchingAndroidInjector
 }
 ```
-
-
 
 ### AppInjector
 
@@ -240,8 +228,6 @@ interface Injectable {}
 
 我们创建`Injectable`接口仅仅是用于让Fragment实现,作为标记,方便控制注入或不注入
 
-
-
 ### DaggerAppComponent
 
 这个类是apt通过我们编写的`AppComponent`接口来实现的
@@ -279,8 +265,6 @@ interface AppComponent {
 使用`Singleton`注解声明为单例模式
 
 该接口内包含了一个Builder接口,接口使用`@Component.Builder`注解标记,标记的接口可以使用`DaggerAppComponent.builder()`来进行调用,接口内实现了application和build方法,联调使用`DaggerAppComponent.builder().application(mvvmApplication).build().inject(mvvmApplication)`
-
-
 
 ### AppModule
 
@@ -329,8 +313,6 @@ provideGithubService方法提供了Retrofit的接口实现,用于网络请求
 
 provideViewModelFactory提供了一个ViewModel工厂的实现,参数ViewModelSubComponent是子组件,该子组件在`@Module`中有提及
 
-
-
 ### MainActivityModel
 
 ```kotlin
@@ -367,8 +349,6 @@ abstract class FragmentBuildersModule {
     abstract fun contributeProjectListFragment(): ProjectListFragment?
 }
 ```
-
-
 
 ## MVVM流程详解
 
