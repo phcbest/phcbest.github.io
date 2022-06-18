@@ -1,4 +1,5 @@
 {
-  "theme": "system",
-  "translucency": false
+  "theme": "obsidian",
+  "translucency": false,
+  "cssTheme": "Atom"
 }
