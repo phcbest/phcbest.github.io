@@ -6,13 +6,18 @@ tags: Android
 
 ## 使用效果
 - 定义API接口
+
 ```kotlin
 interface AppService {  
     @GET("/artist/songs")  
     fun doNetWork(@Field("id") id: String): YepHttpCall  
 }
 ```
-- 初始化并执行请求   
+
+
+
+- 初始化并执行请求
+
 ```kotlin
 val miniRetrofit = MiniRetrofit.Builder().baseUrl("http://192.168.1.108:3000").build()  
 val appService = miniRetrofit.create(AppService::class.java)  
@@ -24,9 +29,10 @@ appService.doNetWork("6452").enqueue(object : CallBack {
     override fun response(response: Response) {  
         Log.i(TAG, "response: 成功${response.body()?.string()}")  
     }  
-  
-})
+})	
 ```
+
+
 
 
 ## 定义注解部分
@@ -53,7 +59,6 @@ annotation class GET(val value: String = "")
 	- `create`方法中实现了动态代理(在运行时，动态创建一组指定的接口的实现类对象),也就是实现了AOP
 
 ```kotlin
-  
 import java.lang.IllegalArgumentException  
 import java.lang.reflect.InvocationHandler  
 import java.lang.reflect.Method  
