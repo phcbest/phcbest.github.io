@@ -37,19 +37,26 @@ appService.doNetWork("6452").enqueue(object : CallBack {
 
 ## 定义注解部分
 - 作用域在*VALUE_PARAMETER*   是一个作用在方法参数上的注解
+
 ```kotlin
 @MustBeDocumented  
 @Target(AnnotationTarget.VALUE_PARAMETER)  
 @Retention(AnnotationRetention.RUNTIME)  
 annotation class Field(val value: String)
 ```
+
+
+
 - 作用域在*FUNCTION*   是一个作用在方法上的注解
+
 ```kotlin
 @MustBeDocumented  
 @Target(AnnotationTarget.FUNCTION)  
 @Retention(AnnotationRetention.RUNTIME)  
 annotation class GET(val value: String = "")
 ```
+
+
 
 
 ## MiniRetrofit类
