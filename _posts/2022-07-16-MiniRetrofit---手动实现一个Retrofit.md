@@ -12,7 +12,7 @@ interface AppService {
     fun doNetWork(@Field("id") id: String): YepHttpCall  
 }
 ```
-- 初始化并执行请求
+- 初始化并执行请求   
 ```kotlin
 val miniRetrofit = MiniRetrofit.Builder().baseUrl("http://192.168.1.108:3000").build()  
 val appService = miniRetrofit.create(AppService::class.java)  
@@ -27,6 +27,7 @@ appService.doNetWork("6452").enqueue(object : CallBack {
   
 })
 ```
+
 
 ## 定义注解部分
 - 作用域在*VALUE_PARAMETER*   是一个作用在方法参数上的注解
@@ -43,6 +44,7 @@ annotation class Field(val value: String)
 @Retention(AnnotationRetention.RUNTIME)  
 annotation class GET(val value: String = "")
 ```
+
 
 ## MiniRetrofit类
 这个类实现了MiniRetrofit的初始化
