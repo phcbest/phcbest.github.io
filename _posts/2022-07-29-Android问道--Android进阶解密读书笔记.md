@@ -112,3 +112,10 @@ service zygote /system/bin/app_process64 -Xzygote /system/bin --zygote --start-s
 
 这一段service的含义为通知init创建名为zygote的进程
 
+
+
+### 属性服务
+
+类似Windows平台上的注册表管理器,注册表的内容**使用键值对记录使用信息**,这样的话电脑重启后还能根据注册表记录进行**初始化工作**
+
+init进程启动时会启动属性服务,并且给属性服务分配内存,用来存储属性
