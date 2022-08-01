@@ -119,3 +119,20 @@ service zygote /system/bin/app_process64 -Xzygote /system/bin --zygote --start-s
 类似Windows平台上的注册表管理器,注册表的内容**使用键值对记录使用信息**,这样的话电脑重启后还能根据注册表记录进行**初始化工作**
 
 init进程启动时会启动属性服务,并且给属性服务分配内存,用来存储属性
+
+在`system/core/init/property_service.cpp`的`property_init`方法中使用`__system_property_area_init()`方法来初始化属性内存区域
+
+在`start_property_service`方法中创建了一个非阻塞的socket
+
+```c++
+  property_set_fd = create_socket(PROP_SERVICE_NAME, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK,
+                                    0666, 0, 0, NULL);
+```
+
+同时也使用`listen(property_set_fd, 8);`对创建出来是socket进行监听
+
+这样创建的Socket就成为了server,也就是属性服务`listen`函数的第二个参数为8.意味着可以同时为8个想要设置属性的用户提供服务
+
+使用`register_epoll_handler(property_set_fd, handle_property_set_fd);`将该server放入了epoll中,使用epoll来监听socket,当数据到来的时候,init进程会调用`handle_property_set_fd`来进行处理
+
+> tips:新的linux内核中,epoll是用来替换select的,是linux内核为了处理大批量的文件描述符进行改进的poll,是一个多路复用的IO接口poll的增强版,epoll显著提高了程序在大量并发连接中只有少量活跃情况下的CPU使用率
