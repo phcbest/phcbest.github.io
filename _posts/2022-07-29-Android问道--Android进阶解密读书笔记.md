@@ -136,3 +136,11 @@ init进程启动时会启动属性服务,并且给属性服务分配内存,用�
 使用`register_epoll_handler(property_set_fd, handle_property_set_fd);`将该server放入了epoll中,使用epoll来监听socket,当数据到来的时候,init进程会调用`handle_property_set_fd`来进行处理
 
 > tips:新的linux内核中,epoll是用来替换select的,是linux内核为了处理大批量的文件描述符进行改进的poll,是一个多路复用的IO接口poll的增强版,epoll显著提高了程序在大量并发连接中只有少量活跃情况下的CPU使用率
+
+**`handle_property_set_fd`函数的作用:**
+
+- Android7中只是用来处理客户端请求
+- Android8中的源码添加了`        handle_property_set(socket, prop_value, prop_value, true);`来做进一步封装处理
+
+系统属性分为两种类型,一种是**普通属性**,一种是**控制属性**
+
