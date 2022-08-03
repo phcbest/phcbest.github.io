@@ -16,13 +16,13 @@
 
 ## => Site Settings
 ##############################
-text_skin: default # "default" (default), "dark", "forest", "ocean", "chocolate", "orange"
-highlight_theme: default # "default" (default), "tomorrow", "tomorrow-night", "tomorrow-night-eighties", "tomorrow-night-blue", "tomorrow-night-bright"
+text_skin: dark # "default" (default), "dark", "forest", "ocean", "chocolate", "orange"
+highlight_theme: tomorrow-night # "default" (default), "tomorrow", "tomorrow-night", "tomorrow-night-eighties", "tomorrow-night-blue", "tomorrow-night-bright"
 url     : # the base hostname & protocol for your site e.g. https://www.someone.com
 baseurl : # does not include hostname
 title   : 磷氢碳
 description: > # this means to ignore newlines until "Language & timezone"
-  梦——それは现実の続き；现実——それは梦の终わり
+  梦——それは现実の続き;现実——それは梦の终わり      梦想是现实的延续;现实是梦想的终结
 
 ## => Language and Timezone
 ##############################
@@ -73,11 +73,11 @@ paths:
 excerpt_separator: <!--more-->
 
 ## license
-license: false # "CC-BY-4.0", "CC-BY-SA-4.0", "CC-BY-NC-4.0", "CC-BY-ND-4.0"
+license: CC-BY-4.0 # "CC-BY-4.0", "CC-BY-SA-4.0", "CC-BY-NC-4.0", "CC-BY-ND-4.0"
 
 ## TOC
 toc:
-  selectors: # "h1,h2,h3" (default)
+  selectors: "h1,h2,h3,h4,h5,h6" # "h1,h2,h3" (default)
 
 
 ## => Markdown Enhancements

@@ -165,13 +165,17 @@ init进程启动时会启动属性服务,并且给属性服务分配内存,用�
 - 初始化和启动属性服务
 - 解析init.rc配置文件并启动Zygote进程
 
-### Zygote进程启动过程
+## Zygote进程启动过程
 
 Zygote是init进程启动时创建的进程
 
-#### 什么是Zygote
+### 什么是Zygote
 
-DVM
+DVM或ART,应用程序进程和系统关键服务的ServiceServer进程都是由Zogote来进行创建的,所以Zygote也叫孵化器,通过**fock**(复制)命令来创建应用程序进程和SystemServer进程
+
+Zygote进程启动的时候会创建DVM或ART,所以fock创建出来的进程可以在内部获取一个DVM或ART的副本
+
+### Zygote启动脚本
 
 
 
