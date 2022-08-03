@@ -30,7 +30,7 @@ init进程是Android系统启动的一个关键步骤,有很多重大职责,init
 
    初始化和启动属性服务
 
-### init的main函数
+#### init的main函数
 
 位于`system/core/init/init.cpp`
 
@@ -41,7 +41,7 @@ init进程是Android系统启动的一个关键步骤,有很多重大职责,init
 - `start_property_servic`启动属性服务
 - `signal_handler_init`设置子信号处理函数,用来防止init进程的子进程变成僵尸进程,系统在子进程暂停和终止的时候发出**SIGCHLD**信号,*signal_handler_init*函数就是接收该信号的.如果init的子进程停止了,该函数还可以通过调用`handle_signal`函数来移除僵尸进程和保活
 
-#### 什么是init.rc
+##### 什么是init.rc
 
 是一个配置文件,由Android Init Language编写的脚本
 
@@ -114,7 +114,7 @@ service zygote /system/bin/app_process64 -Xzygote /system/bin --zygote --start-s
 
 
 
-### 属性服务
+#### 属性服务
 
 类似Windows平台上的注册表管理器,注册表的内容**使用键值对记录使用信息**,这样的话电脑重启后还能根据注册表记录进行**初始化工作**
 
@@ -142,5 +142,30 @@ init进程启动时会启动属性服务,并且给属性服务分配内存,用�
 - Android7中只是用来处理客户端请求
 - Android8中的源码添加了`        handle_property_set(socket, prop_value, prop_value, true);`来做进一步封装处理
 
-系统属性分为两种类型,一种是**普通属性**,一种是**控制属性**
+`handle_property_set`函数功能:
+
+- 检查系统属性的种类*(`  if (android::base::StartsWith(name, "ctl.")) `如果以ctl.开头就是控制属性)*
+- 检查客户端权限
+- 设置控制属性
+
+系统属性分为两种类型,一种是**普通属性**,一种是**控制属性**,控制属性用来执行一些命令,开机动画就是使用了控制属性
+
+之后调用`property_set`函数,该函的作用为
+
+- 判断属性是否合法` if (!is_legal_property_name(name))`
+- 从属性存储空间查找该属性`prop_info* pi = (prop_info*) __system_property_find(name.c_str());`
+- 如果属性存在并且不是以**ro.**开头(只读)`android::base::StartsWith(name, "ro.")`
+- 属性存在就更新数值`__system_property_update(pi, value.c_str(), valuelen)`
+- 属性如何不存在就添加属性`int rc = __system_property_add(name.c_str(), name.size(), value.c_str(), valuelen)`
+- 如果属性是**persist.**开头,进行相应处理` write_persistent_property(name.c_str(), value.c_str());`
+
+#### init启动总结
+
+- 创建和挂载启动所需的文件目录
+- 初始化和启动属性服务
+- 解析init.rc配置文件并启动Zygote进程
+
+#### Zygote进程启动过程
+
+Zygote是init进程启动时创建的进程,
 
