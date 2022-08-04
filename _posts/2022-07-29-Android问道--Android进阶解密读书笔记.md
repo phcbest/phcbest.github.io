@@ -216,15 +216,23 @@ Zygote是通过fock自身来创建子进程的,所以Zygote和他的子线程都
 
 后续会判断zygote变量的值,如果==true就会执行`runtime.start("com.android.internal.os.ZygoteInit", args, zygote);`进行AppRuntime的start
 
-runtime.start会调用位于`frameworks/base/core/jni`的**AndroidRuntime.cpp**中的`void AndroidRuntime::start`方法,这个方法拉起了JVM,从C++层到了Java层,整体流程为
+runtime.start会调用位于`frameworks/base/core/jni`的**AndroidRuntime.cpp**中的`void AndroidRuntime::start`方法,**这个方法拉起了JVM,从C++层到了Java层**,整体流程为
 
 - `startVm(&mJavaVM, &env, zygote)`	启动JVM虚拟机
 - `startReg(env)` 为虚拟机注册JNI方法
-- `    classNameStr = env->NewStringUTF(className);` 得到className *也就是ZygoteInit对应的包名路径*
+- `    classNameStr = env->NewStringUTF(className);` 得到className *也就是ZygoteInit对应的包名路径,即调用runtime.start方法时传递的第一个参数*
 - `    char* slashClassName = toSlashClassName(className);` 将className路径的.替换为/
 - `    jclass startClass = env->FindClass(slashClassName);`找到ZygoteInit 
 - `jmethodID startMeth = env->GetStaticMethodID(startClass, "main",
               "([Ljava/lang/String;)V");` 找到ZygoteInit类的main方法
 - ` env->CallStaticVoidMethod(startClass, startMeth, strArray);` 使用JNI调用ZygoteInit的main方法
 
-这里调用到了ZygoteInit的main方法,ZygoteInit.java这个文件位于
+这里调用到了ZygoteInit的main方法,**ZygoteInit.java**这个文件位于`frameworks/base/core/java/com/android/internal/os`
+
+ZygoteInit的main主要做了四件事
+
+- 创建了一个Server端的Socket`            zygoteServer.registerServerSocket(socketName);`该服务端用于等待AMS*(ActivityManagerService)*请求Zygote创建新的Application进程
+- 预加载类和资源`                preload(bootTimingsTraceLog);`
+- 启动SystemServer进程,系统服务会由SystemServer进程启动`                startSystemServer(abiList, socketName, zygoteServer);`
+- 等待AMS请求创建新的Application进程`zygoteServer.runSelectLoop(abiList);`
+
