@@ -43,7 +43,7 @@ init进程是Android系统启动的一个关键步骤,有很多重大职责,init
 
 #### 什么是init.rc
 
-是一个配置文件,由Android Init Language编写的脚本
+是一个配置文件,由Android Init Language编写的脚本,路径位于`system/core/rootdir`
 
 该脚本由5种类型的语句组成
 
@@ -177,5 +177,54 @@ Zygote进程启动的时候会创建DVM或ART,所以fock创建出来的进程可
 
 ### Zygote启动脚本
 
+路径位于`system/core/rootdir`
 
+在init.rc中使用Import来引入Zygote启动脚本`import /init.${ro.zygote}.rc`,这些脚本也同样是Android Init Languare编写的
 
+init.rc并没有直接引用一个固定的文件,是根据**属性ro.zygote**的内容来引用不同的文件,这里使用ro.zygote属性是是用来控制使用不用的zygote脚本,多个脚本主要是分为32位环境和64位环境的区别,一共有4个**init.zygote.rc**文件
+
+>  四个文件分别是`init.zygote32.rc仅支持32位模式` `init.zygote32_64.rc主模式为32位,辅模式为64位` `init.zygote64.rc仅支持64位` `init.zygote64_32.rc主模式为64位,辅模式为32位`
+
+双模式下的脚本会启动两个Zygote进程,一个作为主模式,一个是辅模式
+
+### Zygote启动过程
+
+init启动Zygote主要是调用app_main.cpp的main函数中的AppRuntime的start方法来启动的
+
+app_main.cpp位于`frameworks/base/cmds/app_process`
+
+Zygote是通过fock自身来创建子进程的,所以Zygote和他的子线程都能执行**app_main.cpp**的main函数,所以在main函数中要区分当前运行在哪个进程,会执行以下判断
+
+```c++
+ 		if (strcmp(arg, "--zygote") == 0) {
+            zygote = true;
+            niceName = ZYGOTE_NICE_NAME;
+        } else if (strcmp(arg, "--start-system-server") == 0) {
+            startSystemServer = true;
+        } else if (strcmp(arg, "--application") == 0) {
+            application = true;
+        } else if (strncmp(arg, "--nice-name=", 12) == 0) {
+            niceName.setTo(arg + 12);
+        } else if (strncmp(arg, "--", 2) != 0) {
+            className.setTo(arg);
+            break;
+        } else {
+            --i;
+            break;
+        }	
+```
+
+后续会判断zygote变量的值,如果==true就会执行`runtime.start("com.android.internal.os.ZygoteInit", args, zygote);`进行AppRuntime的start
+
+runtime.start会调用位于`frameworks/base/core/jni`的**AndroidRuntime.cpp**中的`void AndroidRuntime::start`方法,这个方法拉起了JVM,从C++层到了Java层,整体流程为
+
+- `startVm(&mJavaVM, &env, zygote)`	启动JVM虚拟机
+- `startReg(env)` 为虚拟机注册JNI方法
+- `    classNameStr = env->NewStringUTF(className);` 得到className *也就是ZygoteInit对应的包名路径*
+- `    char* slashClassName = toSlashClassName(className);` 将className路径的.替换为/
+- `    jclass startClass = env->FindClass(slashClassName);`找到ZygoteInit 
+- `jmethodID startMeth = env->GetStaticMethodID(startClass, "main",
+              "([Ljava/lang/String;)V");` 找到ZygoteInit类的main方法
+- ` env->CallStaticVoidMethod(startClass, startMeth, strArray);` 使用JNI调用ZygoteInit的main方法
+
+这里调用到了ZygoteInit的main方法,ZygoteInit.java这个文件位于
