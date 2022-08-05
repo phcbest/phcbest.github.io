@@ -232,7 +232,75 @@ runtime.start会调用位于`frameworks/base/core/jni`的**AndroidRuntime.cpp**�
 ZygoteInit的main主要做了四件事
 
 - 创建了一个Server端的Socket`            zygoteServer.registerServerSocket(socketName);`该服务端用于等待AMS*(ActivityManagerService)*请求Zygote创建新的Application进程
+
+  - 调用registerServerSocket*同级目录的ZygoteService.java*方法首先拼接了Socket的名称`            final String fullSocketName = ANDROID_SOCKET_PREFIX + socketName;`
+  - 得到Socket的环境变量值`                String env = System.getenv(fullSocketName);`
+  - 将环境变量转化为FD文件描述符的参数`                fileDesc = Integer.parseInt(env);`
+  - 创建文件描述符对象并设置参数`FileDescriptor fd = new FileDescriptor();fd.setInt$(fileDesc);`
+  - 创建服务端socket`                mServerSocket = new LocalServerSocket(fd);`
+  - 等SystemServer进程启动后,会在这个服务端的Socket上等待AMS请求创建新的Application进程
+
 - 预加载类和资源`                preload(bootTimingsTraceLog);`
+
 - 启动SystemServer进程,系统服务会由SystemServer进程启动`                startSystemServer(abiList, socketName, zygoteServer);`
+
+  - startSystemServer方法中首先创建了args数组用来保存启动SystemSystem的启动参数
+
+    ```java
+    String args[] = {
+    			//用户ID
+                "--setuid=1000", 
+        		//用户组ID
+                "--setgid=1000",
+        		//所拥有的用户组
+                "--setgroups=1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1018,1021,1023,1032,3001,3002,3003,3006,3007,3009,3010",
+                "--capabilities=" + capabilities + "," + capabilities,
+        		//进程的代号
+                "--nice-name=system_server",
+                "--runtime-args",
+        		//启动的类名
+                "com.android.server.SystemServer",
+            };
+    ```
+
+  - 将args数组封装为Arguments对象`            parsedArgs = new ZygoteConnection.Arguments(args);`
+
+  - 调用Zygote的复制systemServer方法` pid = Zygote.forkSystemServer()`,内部会调用naviteForkSystemServer这个JNI方法来创建一个SystemServer子进程
+
+  - 如果得到的pid为0,就证明当前运行在子线程里面,就进行相应的校正
+
+    ```java
+     if (pid == 0) {
+                if (hasSecondZygote(abiList)) {
+                    waitForSecondaryZygote(socketName);
+                }
+    
+                zygoteServer.closeServerSocket();
+                handleSystemServerProcess(parsedArgs);
+            }
+    ```
+
 - 等待AMS请求创建新的Application进程`zygoteServer.runSelectLoop(abiList);`
+
+  - 将registerServerSocket注册出来的socket的文件描述符字段添加到fds列表中`fds.add(mServerSocket.getFileDescriptor());`
+  - 使用无限循环等待AMS的消息
+  - 通过遍历将fds复制到pollFds中`StructPollfd[] pollFds = new StructPollfd[fds.size()];for (int i = 0; i < pollFds.length; ++i)`
+  - 对pollFds进行遍历`for (int i = pollFds.length - 1; i >= 0; --i)` 
+  - 之后判断`if (i == 0) `说明Zygote和AMS建立了连接
+  - 通过acceptCommandPeer得到了ZygoteConnection 的实例,并且添加到了连接列表peers中`ZygoteConnection newPeer = acceptCommandPeer(abiList);peers.add(newPeer);`
+  - 将**ZygoteConnection**的文件描述符添加到fds中,使他能接收到AMS发送来的请求
+  - 如果判断`if (i != 0) ` 说明AMS向Zygote发送了创建应用进程的请求
+  - 调用ZygoteConnection的**runOnce**函数来创建一个新的应用程序进程` boolean done = peers.get(i).runOnce(this);`
+  - 创建成功后将该连接从列表中销毁`peers.remove(i);fds.remove(i);`
+
+
+### Zygote进程启动总结
+
+Zygote进程启动做了如下几件事
+
+- 创建AppRuntime并调用start方法,启动Zygote进程
+- 创建JVM并为JVM注册JNI方法
+- 通过JNI调用ZygoteInit的Main函数进入Zygote的Java框架
+- 使用registerZygoteSocket创建服务端Socket,并使用runSelectLoop方法等待AMS的请求来创建新的Application
+- 启动SystemServer进程
 
