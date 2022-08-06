@@ -311,5 +311,5 @@ SystemServer进程主要用于创建系统服务,AMS,WMS*(WindowManagerService)*
 
 SystemServer是由Zygote启动和处理的,在ZygoteInit.java中startSystemServer启动了SystemServer进程
 
-SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Socket,该Socket对SystemServer进程无用,所以关闭该Socket,绕后嗲用`handleSystemServerProcess`来启动SystemServer进程
+SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Socket,该Socket对SystemServer进程无用,所以关闭该Socket,然后调用`handleSystemServerProcess`来启动SystemServer进程
 
