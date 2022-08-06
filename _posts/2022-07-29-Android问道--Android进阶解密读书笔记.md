@@ -196,7 +196,7 @@ app_main.cpp位于`frameworks/base/cmds/app_process`
 Zygote是通过fock自身来创建子进程的,所以Zygote和他的子线程都能执行**app_main.cpp**的main函数,所以在main函数中要区分当前运行在哪个进程,会执行以下判断
 
 ```c++
- 		if (strcmp(arg, "--zygote") == 0) {
+if (strcmp(arg, "--zygote") == 0) {
             zygote = true;
             niceName = ZYGOTE_NICE_NAME;
         } else if (strcmp(arg, "--start-system-server") == 0) {
@@ -220,12 +220,11 @@ runtime.start会调用位于`frameworks/base/core/jni`的**AndroidRuntime.cpp**�
 
 - `startVm(&mJavaVM, &env, zygote)`	启动JVM虚拟机
 - `startReg(env)` 为虚拟机注册JNI方法
-- `    classNameStr = env->NewStringUTF(className);` 得到className *也就是ZygoteInit对应的包名路径,即调用runtime.start方法时传递的第一个参数*
-- `    char* slashClassName = toSlashClassName(className);` 将className路径的.替换为/
-- `    jclass startClass = env->FindClass(slashClassName);`找到ZygoteInit 
-- `jmethodID startMeth = env->GetStaticMethodID(startClass, "main",
-              "([Ljava/lang/String;)V");` 找到ZygoteInit类的main方法
-- ` env->CallStaticVoidMethod(startClass, startMeth, strArray);` 使用JNI调用ZygoteInit的main方法
+- `classNameStr = env->NewStringUTF(className);` 得到className *也就是ZygoteInit对应的包名路径,即调用runtime.start方法时传递的第一个参数*
+- `char* slashClassName = toSlashClassName(className);` 将className路径的.替换为/
+- `jclass startClass = env->FindClass(slashClassName);`找到ZygoteInit 
+- `jmethodID startMeth = env->GetStaticMethodID(startClass, "main","([Ljava/lang/String;)V");` 找到ZygoteInit类的main方法
+- `env->CallStaticVoidMethod(startClass, startMeth, strArray);` 使用JNI调用ZygoteInit的main方法
 
 这里调用到了ZygoteInit的main方法,**ZygoteInit.java**这个文件位于`frameworks/base/core/java/com/android/internal/os`
 
@@ -303,4 +302,14 @@ Zygote进程启动做了如下几件事
 - 通过JNI调用ZygoteInit的Main函数进入Zygote的Java框架
 - 使用registerZygoteSocket创建服务端Socket,并使用runSelectLoop方法等待AMS的请求来创建新的Application
 - 启动SystemServer进程
+
+
+
+## SystemServer的处理过程
+
+SystemServer进程主要用于创建系统服务,AMS,WMS*(WindowManagerService)*,PMS*(PackageManagerService)*都是由其创建的
+
+SystemServer是由Zygote启动和处理的,在ZygoteInit.java中startSystemServer启动了SystemServer进程
+
+SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Socket,该Socket对SystemServer进程无用,所以关闭该Socket,绕后嗲用`handleSystemServerProcess`来启动SystemServer进程
 
