@@ -313,3 +313,7 @@ SystemServer是由Zygote启动和处理的,在ZygoteInit.java中startSystemServe
 
 SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Socket,该Socket对SystemServer进程无用,所以关闭该Socket,然后调用`handleSystemServerProcess`来启动SystemServer进程
 
+在`handleSystemServerProcess`中创建了PathClassLoader`cl = createPathClassLoader(systemServerClasspath, parsedArgs.targetSdkVersion);`,然后执行了`ZygoteInit.zygoteInit(parsedArgs.targetSdkVersion, parsedArgs.remainingArgs, cl);`
+
+在ZygoteInit方法中,调用了**nativeZygoteInit**方法,这是一个JNI画漫画,调用CPP层启动了Binder线程池,这样SystemServer进程就可以使用Binder和其他进程通信了,之后使用`RuntimeInit.applicationInit(targetSdkVersion, argv, classLoader);`进入了SystemServer的Main方法
+
