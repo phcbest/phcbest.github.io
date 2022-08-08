@@ -317,3 +317,25 @@ SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Sock
 
 在ZygoteInit方法中,调用了**nativeZygoteInit**方法,这是一个JNI画漫画,调用CPP层启动了Binder线程池,这样SystemServer进程就可以使用Binder和其他进程通信了,之后使用`RuntimeInit.applicationInit(targetSdkVersion, argv, classLoader);`进入了SystemServer的Main方法
 
+### 启动Binder线程池
+
+**nativeZygoteInit**是一个Native方法,他对应的JNI文件位于`frameworks/base/core/jni/AndroidRuntime.cpp`
+
+以下代码让我们知道nativeZygoteInit方法对应的是com_android_internal_os_ZygoteInit_nativeZygoteInit这个C++函数
+
+```cpp
+int register_com_android_internal_os_ZygoteInit(JNIEnv* env)
+{
+    const JNINativeMethod methods[] = {
+        { "nativeZygoteInit", "()V",
+            (void*) com_android_internal_os_ZygoteInit_nativeZygoteInit },
+    };
+    return jniRegisterNativeMethods(env, "com/android/internal/os/ZygoteInit",
+        methods, NELEM(methods));
+}
+```
+
+**com_android_internal_os_ZygoteInit_nativeZygoteInit**这个函数只执行了一段代码` gCurRuntime->onZygoteInit();`
+
+gCurRuntime的类型是**AndroidRuntime*** *(AndroidRuntime指针)* 具体是指向了AndroidRuntime的子类AppRuntime,这个对象在app_main.cpp中定义,在**onZygoteInit()**函数中主要是执行了`proc->startThreadPool();`启动了一个Binder进程池
+
