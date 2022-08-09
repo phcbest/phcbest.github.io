@@ -315,7 +315,7 @@ SystemServer进程复制于Zygote进程,因此也得到Zygote进程创建的Sock
 
 在`handleSystemServerProcess`中创建了PathClassLoader`cl = createPathClassLoader(systemServerClasspath, parsedArgs.targetSdkVersion);`,然后执行了`ZygoteInit.zygoteInit(parsedArgs.targetSdkVersion, parsedArgs.remainingArgs, cl);`
 
-在ZygoteInit方法中,调用了**nativeZygoteInit**方法,这是一个JNI画漫画,调用CPP层启动了Binder线程池,这样SystemServer进程就可以使用Binder和其他进程通信了,之后使用`RuntimeInit.applicationInit(targetSdkVersion, argv, classLoader);`进入了SystemServer的Main方法
+在ZygoteInit方法中,调用了**nativeZygoteInit**方法,这是一个JNI函数,调用CPP层启动了Binder线程池,这样SystemServer进程就可以使用Binder和其他进程通信了,之后使用`RuntimeInit.applicationInit(targetSdkVersion, argv, classLoader);`**进入了SystemServer的Main方法**
 
 ### 启动Binder线程池
 
@@ -338,4 +338,41 @@ int register_com_android_internal_os_ZygoteInit(JNIEnv* env)
 **com_android_internal_os_ZygoteInit_nativeZygoteInit**这个函数只执行了一段代码` gCurRuntime->onZygoteInit();`
 
 gCurRuntime的类型是**AndroidRuntime*** *(AndroidRuntime指针)* 具体是指向了AndroidRuntime的子类AppRuntime,这个对象在app_main.cpp中定义,在**onZygoteInit()**函数中主要是执行了`proc->startThreadPool();`启动了一个Binder进程池
+
+### 进入SystemServer的main方法
+
+ZygoteInit中启动了Binder线程池后,紧接着就进入了SystemServer `RuntimeInit.applicationInit(targetSdkVersion, argv, classLoader);`
+
+**RuntimeInit**类位于`frameworks/base/core/java/com/android/internal/os`
+
+在**applicationInit**方法中主要调用了`invokeStaticMain(args.startClass, args.startArgs, classLoader);`方法
+
+1. 通过**反射**得到了SystemServer的实例`cl = Class.forName(className, true, classLoader);`
+
+2. 找到System的SystemServer的Main方法`m = cl.getMethod("main", new Class[] { String[].class });`
+
+3. 抛出异常`throw new Zygote.MethodAndArgsCaller(m, argv);`这个异常如果发生,位于ZygoteInit的Main方法会捕捉错误,然后执行run,需要这样做的原因是抛出异常的处理会**清除所有设置过程需要的堆栈帧**,让SystemServer的main方法看起来像是SystemServer进程的入口方法.Zygote启动SystemServer进程后,SystemServer已经做了很多的工作,这些工作都是调用main方法前做的
+
+   ```java
+   catch (Zygote.MethodAndArgsCaller caller) {
+               caller.run();
+           }
+   ```
+
+MethodAndArgsCaller是Zygote类的静态内部类,在该类的run方法中,主要执行`mMethod.invoke(null, new Object[] { mArgs });`
+
+调用了invoke方法,SystemServer的main方法就会被动态调用,然后成功进入main方法中
+
+### 解析SystemServer进程
+
+SystemServer类位于`frameworks\base\services\java\com\android\server`
+
+在main方法中,只执行了`new SystemServer().run();`创建了一个新的SystemServer实例,并调用run方法
+
+**run方法的流程**
+
+1. 创建消息Looper `Looper.prepareMainLooper();`
+2. 加载动态库`System.loadLibrary("android_servers");`
+3. 创建系统Context`createSystemContext();`
+4. 
 
