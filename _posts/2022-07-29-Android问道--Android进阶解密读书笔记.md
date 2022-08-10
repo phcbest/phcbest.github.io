@@ -374,5 +374,61 @@ SystemServer类位于`frameworks\base\services\java\com\android\server`
 1. 创建消息Looper `Looper.prepareMainLooper();`
 2. 加载动态库`System.loadLibrary("android_servers");`
 3. 创建系统Context`createSystemContext();`
-4. 
+4. 启动引导服务*(ActivityManagerService,PowerManagerService,PackageManagerService)*`startBootstrapServices();`
+5. 启动核心服务*(DropBoxManagerService日志相关,BatteryService,UsageStateService,WebViewUpdateService)*`startCoreServices();`
+6. 启动其他服务*(CameraService,AlarmManagerService,VrManagerService)*`startOtherServices();`
 
+官方将系统服务分成了三种类型,分别是**引导服务**,**核心服务**和**其他服务**,这些服务的**父类**都是SystemService
+
+这些系统服务的启动逻辑都是相似的,使用PowerManagerService来举例说明
+
+使用`mPowerManagerService = mSystemServiceManager.startService(PowerManagerService.class);`来启动该服务
+
+mSystemServiceManager是SystemServiceManager的实例,该类位于`frameworks\base\services\core\java\com\android\server`调用该类中的startService方法
+
+```java
+public void startService(@NonNull final SystemService service) {
+        // 注册Service,将service添加到了存储SystemService类型的ArrayList
+        mServices.add(service);
+        long time = System.currentTimeMillis();
+        try {
+			//启动Service,
+            service.onStart();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Failed to start service " + service.getClass().getName()
+                    + ": onStart threw an exception", ex);
+        }
+        warnIfTooLong(System.currentTimeMillis() - time, service, "onStart");
+    }
+```
+
+除了这种方法启动,也可以通过直接调用Service的main函数来启动服务,以PackageManagerService为例,其启动服务是执行了`mPackageManagerService = PackageManagerService.main(mSystemContext, installer,mFactoryTestMode != FactoryTest.FACTORY_TEST_OFF, mOnlyCore);`
+
+*PackageManagerService位于frameworks\base\services\core\java\com\android\server\pm*
+
+```java
+public static PackageManagerService main(Context context, Installer installer,
+            boolean factoryTest, boolean onlyCore) {
+        // 自检初始设置
+        PackageManagerServiceCompilerMapping.checkProperties();
+		//创建PackageManagerService实例
+        PackageManagerService m = new PackageManagerService(context, installer,
+                factoryTest, onlyCore);
+        m.enableSystemUserPackages();
+    	//将PackageManagerService的实例注册到ServiceManager中
+        ServiceManager.addService("package", m);
+        return m;
+    }
+```
+
+**ServiceManager**是用来管理系统中的各种System,用于系统C/S架构中的Binder通信机制,如果客户端要使用某个Service,就需先去ServiceManager查找相关信息,然后根据相关系信息和Service所在的进程建立通信,然后客户端就能使用Service了
+
+### SystemServer总结
+
+1. 启动Binder线程池,让线程之间能够通信
+2. 创建SystemServiceManager,用来对系统服务进行创建,启动和生命周期管理
+3. 启动各种系统服务
+
+## Launcher启动过程
+
+系统启动的最后一步
