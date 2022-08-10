@@ -1,6 +1,6 @@
 ---
 layout: article
-title: Android问道--Android进阶解密读书笔记
+title: Android问道--系统启动的流程
 tags: Android
 ---
 
@@ -429,6 +429,15 @@ public static PackageManagerService main(Context context, Installer installer,
 2. 创建SystemServiceManager,用来对系统服务进行创建,启动和生命周期管理
 3. 启动各种系统服务
 
-## Launcher启动过程
+## Launcher的启动
 
-系统启动的最后一步
+系统启动的最后一步是启动一个应用程序来显示系统中已安装的应用程序,该应用就叫做**Launcher**,Launcher在启动过程中会请求PackageManagerService,返回系统中已经安装的应用程序的信息,并且将显示在桌面上,这样用户点击图标就可以启动相应的应用程序
+
+Launcher的作用主要有两个
+
+- 作为启动器,用来启动应用程序
+- 作为桌面,用于显示和管理应用程序的快捷方法和桌面小组件
+
+### Launcher启动过程介绍
+
+startOtherService  -> **SystemServer** -> systemReady -> **AMS** -> resumeFocusedStack -> **ActivityStackSupervisor** -> resumeTopActivity -> **ActivityStack** -> resumeTopActivityInnerLocked -> **ActivityStack**  -> resumHomeStackTask -> **ActivityStackSupervisor** -> startHomeActivityLocked -> **AMS**
