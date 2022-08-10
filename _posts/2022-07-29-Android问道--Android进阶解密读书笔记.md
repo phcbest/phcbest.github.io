@@ -441,3 +441,75 @@ Launcher的作用主要有两个
 ### Launcher启动过程介绍
 
 startOtherService  -> **SystemServer** -> systemReady -> **AMS** -> resumeFocusedStack -> **ActivityStackSupervisor** -> resumeTopActivity -> **ActivityStack** -> resumeTopActivityInnerLocked -> **ActivityStack**  -> resumHomeStackTask -> **ActivityStackSupervisor** -> startHomeActivityLocked -> **AMS**
+
+启动Launcher的入口为AMS的**systemReady**方法,在SystemServer的**startOtherServices**方法中调用,也就是启动其他系统服务的时候调用
+
+当`mActivityManagerService.systemReady`会执行**回调**执行` mSystemServiceManager.startBootPhase(SystemService.PHASE_ACTIVITY_MANAGER_READY);`
+
+systemReady方法位于ActivityManagerService类中 *位于frameworks\base\services\core\java\com\android\server\am*,在该方法中调用了`            mStackSupervisor.resumeFocusedStackTopActivityLocked();`
+
+resumeFocusedStackTopActivityLocked方法位于ActivityStackSupervisor类中,和AMS位于同一级目录,,在该方法中执行了判断
+
+```java
+if (targetStack != null && isFocusedStack(targetStack)) {
+            return targetStack.resumeTopActivityUncheckedLocked(target, targetOptions);
+        }
+```
+
+调用了targetStack参数的resumeTopActivityUncheckedLocked方法,该参数是一个**ActivityStack**对象位于AMS同级路径下,ActivityStack对象是用来描述Activity堆栈的
+
+resumeTopActivityUncheckedLocked方法中调用了`result = resumeTopActivityInnerLocked(prev, options);`
+
+resumeTopActivityInnerLocked方法很长,关键部分为`return isOnHomeDisplay() && mStackSupervisor.resumeHomeStackTask(prev, "prevFinished");` 
+
+在resumeHomeStackTask方法中调用了AMS中的方法`return mService.startHomeActivityLocked(mCurrentUser, myReason);`
+
+```java
+    boolean startHomeActivityLocked(int userId, String reason) {
+        //判断系统的运行模式,还有mTopAction的值,如果工厂模式等于低级工厂模式并且mTopAction == null,直接返回false
+        //mFactoryTest代表系统运行的模式,运行模式有三种,非工厂模式,低级工厂模式,高级工厂模式
+        //mTopAction用来描述第一个被启动的Activity组件的Action,默认值为Intent.ACTION_MAIN
+        if (mFactoryTest == FactoryTest.FACTORY_TEST_LOW_LEVEL
+                && mTopAction == null) {
+            return false;
+        }
+		//创建Launcher启动需要的Intent
+        Intent intent = getHomeIntent();
+        ActivityInfo aInfo = resolveActivityInfo(intent, STOCK_PM_FLAGS, userId);
+        if (aInfo != null) {
+            intent.setComponent(new ComponentName(aInfo.applicationInfo.packageName, aInfo.name));
+            aInfo = new ActivityInfo(aInfo);
+            aInfo.applicationInfo = getAppInfoForUser(aInfo.applicationInfo, userId);
+            ProcessRecord app = getProcessRecordLocked(aInfo.processName,
+                    aInfo.applicationInfo.uid, true);
+			//判断符合Action为Intent.ACTION_MAIN,Category为Intent.CATEGORY_HOME的活动是否已经启动
+            if (app == null || app.instr == null) {
+                intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_NEW_TASK);
+                final int resolvedUserId = UserHandle.getUserId(aInfo.applicationInfo.uid);
+                final String myReason = reason + ":" + userId + ":" + resolvedUserId;
+                //如果没有启动,就启动该应用程序,也就是Launcher
+                mActivityStarter.startHomeActivityLocked(intent, aInfo, myReason);
+            }
+        } else {
+            Slog.wtf(TAG, "No home screen found for " + intent, new Throwable());
+        }
+
+        return true;
+    }
+
+	//获得Launcher的Intent
+    Intent getHomeIntent() {
+		//创建Intent,将mTopAction和mTopData传入
+        Intent intent = new Intent(mTopAction, mTopData != null ? Uri.parse(mTopData) : null);
+        intent.setComponent(mTopComponent);
+        intent.addFlags(Intent.FLAG_DEBUG_TRIAGED_MISSING);
+        //如果系统运行的不是低工厂模式,将分类设置为Intent.CATEGORY_HOME
+        if (mFactoryTest != FactoryTest.FACTORY_TEST_LOW_LEVEL) {
+            intent.addCategory(Intent.CATEGORY_HOME);
+        }
+        return intent;
+    }
+
+```
+
+为什么需要Action为Intent.ACTION_MAIN,Category为Intent.CATEGORY_HOME,因为Launcher的**AndroidManifast**文件标签匹配了Action为**Intent.ACTION_MAIN**,Category为**Intent.CATEGORY_HOME**
