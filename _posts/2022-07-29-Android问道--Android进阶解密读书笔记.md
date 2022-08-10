@@ -513,3 +513,16 @@ resumeTopActivityInnerLocked方法很长,关键部分为`return isOnHomeDisplay(
 ```
 
 为什么需要Action为Intent.ACTION_MAIN,Category为Intent.CATEGORY_HOME,因为Launcher的**AndroidManifast**文件标签匹配了Action为**Intent.ACTION_MAIN**,Category为**Intent.CATEGORY_HOME**
+
+```xml
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.MONKEY"/>
+            </intent-filter>
+```
+
+启动Launcher的时候执行了`mActivityStarter.startHomeActivityLocked(intent, aInfo, myReason);`这样一个方法,mActivityStarter是**ActivityStarter**对象的实例化,位于AMS同级目录下
+
+在startHomeActivityLocked方法中,将Launcher放入了HomeStack中,HomeStack是在ActivityStackSupervisor中定义的用来存储Launcher的变量,之后调用**startActivityLocked**方法来启动Launcher,最后会进入Launcher的OnCreate生命周期,到此为止,Launcher完成了启动
