@@ -605,7 +605,7 @@ resumeTopActivityInnerLocked方法很长,关键部分为`return isOnHomeDisplay(
 
 ```mermaid
 graph TD;
-	BootLoader --> LinuxKernel --> init --> Zygote --> SystemServer;
-	SystemServer --> WMS,PWS等其他系统服务;
-	SystemServer --> ActivityManagerService --> Launcher;
+	BootLoader-->LinuxKernel-->init-->Zygote -->SystemServer;
+	SystemServer-->WMS,PWS等其他系统服务;
+	SystemServer-->ActivityManagerService-->Launcher;
 ```
