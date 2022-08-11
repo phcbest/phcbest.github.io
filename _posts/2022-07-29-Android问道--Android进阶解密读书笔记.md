@@ -610,7 +610,8 @@ graph TD;
 	init --> Zygote;
 	Zygote --> SystemServer;
 	SystemServer --> WMS,PWS等其他系统服务;
-	SystemServer --> ActivityManagerService-->Launcher;
+	SystemServer --> ActivityManagerService;
+	ActivityManagerService-->Launcher;
 ```
 
 
