@@ -526,3 +526,86 @@ resumeTopActivityInnerLocked方法很长,关键部分为`return isOnHomeDisplay(
 启动Launcher的时候执行了`mActivityStarter.startHomeActivityLocked(intent, aInfo, myReason);`这样一个方法,mActivityStarter是**ActivityStarter**对象的实例化,位于AMS同级目录下
 
 在startHomeActivityLocked方法中,将Launcher放入了HomeStack中,HomeStack是在ActivityStackSupervisor中定义的用来存储Launcher的变量,之后调用**startActivityLocked**方法来启动Launcher,最后会进入Launcher的OnCreate生命周期,到此为止,Launcher完成了启动
+
+### Launcher中应用图标的显示过程
+
+我们从Launcher的**onCreate**方法入手 *位于packages\apps\Launcher3\src\com\android\launcher3\Launcher.java*
+
+- 获得LauncherAppState的实例`LauncherAppState app = LauncherAppState.getInstance(this);`
+
+- 调用LauncherAppState的setLauncher方法,将this*(Launcher对象)*传进去`mModel = app.setLauncher(this);`
+
+  - 在setLauncher方法中调用了LauncherModel的initialize方法`mModel.initialize(launcher);`
+
+  - ```java
+    public void initialize(Callbacks callbacks) {
+        	//callbacks就是传入的launcher
+            synchronized (mLock) {
+                Preconditions.assertUIThread();
+                mHandler.cancelAll();
+    			//将launcher封装成弱引用对象
+                mCallbacks = new WeakReference<>(callbacks);
+            }
+        }
+    ```
+
+- 调用了LauncherModel的**startLoader**方法 `mModel.startLoader(getCurrentWorkspaceScreen());`
+
+  - 在类中创建了具有消息循环的线程HandlerThread `@Thunk static final HandlerThread sWorkerThread = new HandlerThread("launcher-loader");`
+  - 在类中创建了一个Handler并且将刚刚创建的HandlerThread的Lopper传递进去 `@Thunk static final Handler sWorker = new Handler(sWorkerThread.getLooper());` handler的作用在于向HandlerThread发送消息
+  - 在startLoader方法中创建了一个LoaderTask `mLoaderTask = new LoaderTask(mApp.getContext(), synchronousBindPage);` 之后将LoaderTask发送给了HandlerTask `sWorker.post(mLoaderTask);`
+  - LoaderTask是LauncherModel的内部类,它实现了Runable接口,当LoaderTask描述的信息被处理时,会调用其run方法
+    - 加载工作区信息 `loadWorkspace();`
+    - 绑定工作区信息 `bindWorkspace(mPageToBindFirst);`
+    - 加载系统已经安装的应用程序信息 `loadAllApps();`
+    - Launcher是用工作区的形式来显示系统安装的应用程序的快捷图标的,每个工作区都是用来描述一个抽象桌面的,它由N个屏幕组成,每个屏幕又分为N个单元格,每个单元格显示一个应用程序的快捷图标
+    - loadAllApps方法中调用了`callbacks.bindAllApplications(added);`,之前分析过LauncherModel.initialize的时候已经将Launcher转换为了mCallbacks,这里的**callbacks**.bindAllApplications其实就是**Launcher**.bindAllApplications
+    - **Launcher.bindAllApplications**中调用了`mAppsView.setApps(apps);` mAppsView是AllAppsContainerView类型的,我们在这里将包含应用信息的列表**apps**传进去*(AllAppsContainerView位于packages\apps\Launcher3\src\com\android\launcher3\allapps)*
+    - setApps方法中调用了`mApps.setApps(apps);` mApps是一个**AlphabeticalAppsList**类型的对象
+
+- 最后我们来看一下**AllAppsContainerView**的**onFinishInflate**方法,该方法会在AllAppsContainerView加载完XML布局的时候调用
+
+  - 找到AllAppsRecyclerView来显示App列表 `mAppsRecyclerView = (AllAppsRecyclerView) findViewById(R.id.apps_list_view);`
+  - 将App信息设置进去 `mAppsRecyclerView.setApps(mApps);`
+  - 设置适配器`mAppsRecyclerView.setAdapter(mAdapter);`
+
+到此位置我梳理完成了Launcher的启动流程
+
+# 启动流程总结
+
+1. 启动电源以及系统启动
+
+   当电源按下的时候,引导芯片代码从预定的地方和开始执行,加载引导程序BootLoader到RAM,然后执行
+
+2. 引导程序BootLoader
+
+   BootLoader是在Android操作系统开始运行前的一个小程序,主要作用是把系统OS拉起来并运行
+
+3. Linux内核启动
+
+   当内核启动时,设置内存,被保护存储器,计划列表,加载驱动,当内核完成系统设置时,会在系统中寻找init.rc文件,并启动init进程
+
+4. init进程启动
+
+   初始化和启动属性服务,并启动Zygote进程
+
+5. Zygote进程启动
+
+   创建Java虚拟机并为Java虚拟机注册JNI方法,创建服务端的Socket,启动SystemServer进程
+
+6. SystemServer进程启动
+
+   启动Binder线程池和SystemServiceManager,并启动各种系统服务
+
+7. Launcher启动
+
+   被SystemServer启动的AMS会启动Launcher,启动Launcher后会将已安装应用的快捷图标显示到界面上
+
+整个启动的流程图如下所示
+
+```mermaid
+graph TD;
+	BootLoader --> LinuxKernel --> init --> Zygote --> SystemServer
+	SystemServer --> WMS,PWS等其他系统服务
+	SystemServer --> ActivityManagerService --> Launcher
+```
