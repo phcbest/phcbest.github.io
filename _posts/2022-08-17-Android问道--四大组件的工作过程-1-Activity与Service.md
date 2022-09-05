@@ -1,6 +1,6 @@
 ---
 layout: article
-title: Android问道--四大组件的工作过程
+title: Android问道--四大组件的工作过程-1-Activity与Service
 tags: Android 
 ---
 
@@ -878,5 +878,63 @@ mServices.bindServiceLocked(caller, token, service,resolvedType, connection, fla
   requestServiceBindingLocked(s, b.intent, callerFg, false);
   ```
 
-这个两个requestServiceBindingLocked的调用的区别就是最后一个参数rebind，表示是否重新绑定
+这个两个requestServiceBindingLocked的调用的区别就是最后一个参数**rebind**，表示是否重新绑定
 
+**requestServiceBindingLocked**方法中执行了以下行为
+
+- 判断了`if ((!i.requested || rebind) && i.apps.size() > 0) `
+
+  - 其中r.requested表示是否发送过绑定Service的请求，我们此前判断过是已经发送的，那么`!i.requested `就会等于false
+
+  - 之前调用该方法传过来的**rebind**参数为true，所以**(!i.requested || rebind)** 判断为true
+
+  - **i.apps.size()**中的**i**是IntentBindRecord类型，AMS会为每个绑定Service的Intent分配一个IntentBindRecord，IntentBindRecord类中定义了以下几个变量
+
+    ```java
+        /** The running service. 正在运行的服务*/
+        final ServiceRecord service;
+        /** The intent that is bound. 被绑定的Intent*/
+        final Intent.FilterComparison intent; // 
+        /** All apps that have bound to this Intent.  所有绑定到这个Intent的应用 */
+        final ArrayMap<ProcessRecord, AppBindRecord> apps = new ArrayMap<ProcessRecord, AppBindRecord>();
+    ```
+
+    不同的应用程序进程之间可能使用同一个Intent来绑定Service，所以**i.apps.size()**是判断**使用当前Intent来绑定Sercice的应用程序进程数量大于0个**
+
+来到到**bindServiceLocked**方法中，该方法一开始就调用了**ServiceRecord.retrieveAppBindingLocked**方法
+
+```java
+public AppBindRecord retrieveAppBindingLocked(Intent intent , ProcessRecord app) {
+        Intent.FilterComparison filter = new Intent.FilterComparison(intent);
+        IntentBindRecord i = bindings.get(filter);
+        if (i == null) {
+            //创建IntentRecord
+            i = new IntentBindRecord(this, filter);
+            bindings.put(filter, i);
+        }
+    	//根据ProcessRecord获得IntentBindRecord中存储的AppBindRecord
+        AppBindRecord a = i.apps.get(app);
+    	//如果AppBindRecord不为null，直接return出去
+        if (a != null) {
+            return a;
+        }
+    	//如果AppBindRecord空就创建一个，并且将ProcessRecord作为Key，AppBindRecord作为value保存在IntentBindRecord的apps也是（i.app）中
+        a = new AppBindRecord(this, i, app);
+        i.apps.put(app, a);
+        return a;
+}
+```
+
+接下来回到**requestServiceBindingLocked**方法中，`if ((!i.requested || rebind) && i.apps.size() > 0) `这个判断因为
+
+- `!i.requested`为false
+- `rebind` 为true
+- `i.apps.size() > 0` 为true
+
+综上所述，与预算符两边的表达式都满足true的要求，if判断为true，会执行以下代码
+
+```java
+r.app.thread.scheduleBindService(r, i.intent.getIntent(), rebind,r.app.repProcState);
+```
+
+**r.app.thread**类型为**IApplicationThread**，由ActivityThread的内部类ApplicationThread实现
