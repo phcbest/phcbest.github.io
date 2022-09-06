@@ -938,3 +938,50 @@ r.app.thread.scheduleBindService(r, i.intent.getIntent(), rebind,r.app.repProcSt
 ```
 
 **r.app.thread**类型为**IApplicationThread**，由ActivityThread的内部类ApplicationThread实现
+
+```java
+public final void scheduleBindService(IBinder token, Intent intent,boolean rebind, int processState) {
+            updateProcessState(processState, false);
+            BindServiceData s = new BindServiceData();
+            s.token = token;
+            s.intent = intent;
+            s.rebind = rebind;
+
+            if (DEBUG_SERVICE)
+                Slog.v(TAG, "scheduleBindService token=" + token + " intent=" + intent + " uid="
+                        + Binder.getCallingUid() + " pid=" + Binder.getCallingPid());
+            sendMessage(H.BIND_SERVICE, s);
+}
+```
+
+在该方法中，将Service的信息封装成BindServiceData对象，BindServiceData的成员变量rebind设置为false，然后使用**sendMessage**向H发送消息，进行Service的绑定，接下来来到H的**handleMessage**方法中
+
+当handleMessage收到**BIND_SERVICE**消息的时候，会执行`handleBindService((BindServiceData)msg.obj);`
+
+**handleBindService**这个方法执行了以下代码
+
+- 获取需要绑定的Service
+
+  ```kava
+  Service s = mServices.get(data.token);
+  ```
+
+- 判断是否需要重新绑定 `if (!data.rebind)`
+
+  - 如果不需要重新绑定
+
+    ```java
+    IBinder binder = s.onBind(data.intent);
+    ActivityManager.getService().publishService(data.token, data.intent, binder);
+    ```
+
+  - 如果需要重新绑定
+
+    ```java
+    s.onRebind(data.intent);
+    ActivityManager.getService().serviceDoneExecuting(data.token, SERVICE_DONE_EXECUTING_ANON, 0, 0);
+    ```
+
+我们得出一个结论，**当前应用程序进程第一个和Service进行绑定，并且Sercice已经调用onUnBind方法的情况下，会调用onReBind方法**
+
+handleBindService方法有两种情况，一种是绑定过Service的情况，一种是未绑定Service的情况，我们详细**分析未绑定**的情况，也就是**ActivityManagerService.publishService**方法
