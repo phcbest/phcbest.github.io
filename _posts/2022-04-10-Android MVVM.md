@@ -72,9 +72,7 @@ MVVM是一种关注点分离的架构方式,允许将用户界面逻辑和业务
 
    视图的角色是一个**观察者**观测ViewModel对象来获取数据,从而更新UI
 
-   
-
-   ![img](https://raw.githubusercontent.com/phcbest/phcbest.github.io/master/_posts/2022-04-10-Android%20MVVM.assets/1BpxMFh7DdX0_hqX6ABkDgw-16495849177752.png)
+![](https://raw.githubusercontent.com/phcbest/PicBed/main/img/1BpxMFh7DdX0_hqX6ABkDgw-16495849177752.png)
 
 ### LiveData
 
@@ -90,7 +88,7 @@ ViewModel类为MVVM中的ViewModel提供了一个很好的基类,**该类的拓�
 
 **ViewModel类的生命周期**
 
-![img](https://raw.githubusercontent.com/phcbest/phcbest.github.io/master/_posts/2022-04-10-Android%20MVVM.assets/1uWXunt0A6fKUFU8PsTLkfA.png)
+![1uWXunt0A6fKUFU8PsTLkfA](https://raw.githubusercontent.com/phcbest/PicBed/main/img/1uWXunt0A6fKUFU8PsTLkfA.png)
 
 ### MVVM实现的重要原则
 
