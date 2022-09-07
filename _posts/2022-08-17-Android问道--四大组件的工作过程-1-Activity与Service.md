@@ -827,6 +827,36 @@ public boolean bindService(Intent service, ServiceConnection conn,int flags) {
 
 ## AMS中绑定Service
 
+### Service的绑定过程的**前半部分**调用关系
+
+```mermaid
+sequenceDiagram
+	调用 ->> AMS : bindService
+	activate AMS 
+	AMS ->> ActiveService : bindServiceLocked
+	deactivate AMS
+	activate ActiveService
+	ActiveService ->> ActiveService : requestServiceBindingLocked
+	ActiveService ->> ApplicationThread : scheduleBindService
+	deactivate ActiveService
+	activate ApplicationThread
+	ApplicationThread ->> ActivityThread : sendMessage
+	deactivate ApplicationThread
+	activate ActivityThread
+	ActivityThread ->> H : handleMessage
+	deactivate ActivityThread
+	activate H
+	H ->> ActivityThread : handleBindService
+	deactivate H
+	activate ActivityThread
+	ActivityThread ->> AMS : publishService
+	deactivate ActivityThread
+	activate AMS
+	deactivate AMS
+```
+
+
+
 在AMS的bindServicce方法最后会调用**ActiveService**类型的mService的bindServiceLocked方法
 
 ```java
@@ -985,3 +1015,97 @@ public final void scheduleBindService(IBinder token, Intent intent,boolean rebin
 我们得出一个结论，**当前应用程序进程第一个和Service进行绑定，并且Sercice已经调用onUnBind方法的情况下，会调用onReBind方法**
 
 handleBindService方法有两种情况，一种是绑定过Service的情况，一种是未绑定Service的情况，我们详细**分析未绑定**的情况，也就是**ActivityManagerService.publishService**方法
+
+### Service的绑定过程的**后半部分**调用关系
+
+```mermaid
+sequenceDiagram
+	ActivityThread ->> AMS : publishService
+	activate AMS
+	AMS ->> ActiveServices : publishServiceLocked
+	deactivate AMS
+	activate ActiveServices
+	ActiveServices ->> InnerConnection : connected
+	deactivate ActiveServices
+	activate InnerConnection
+    InnerConnection ->> ServiceDispatcher : connected
+    deactivate InnerConnection
+    activate ServiceDispatcher
+    ServiceDispatcher ->> RunConnection : run
+    deactivate ServiceDispatcher
+    activate RunConnection
+    RunConnection ->>　ServiceDispatcher　: doConnected
+	deactivate RunConnection
+	activate ServiceDispatcher
+    ServiceDispatcher ->> ServiceConnection : onServiceConnected
+    deactivate ServiceDispatcher
+    activate ServiceConnection
+    deactivate ServiceConnection
+```
+
+
+
+从**ActivityManagerService.publishService**方法开始解析，这个方法中调用了ActiveServices类型的mServices变量的**publishServiceLocked**方法
+
+**ActiveServices.publishServiceLocked**中调用了
+
+```java
+c.conn.connected(r.name, service, false);
+```
+
+c.conn是IServiceConnection，是ServiceConnection在本地的代理，用来解决当前应用程序进程和Service跨进程通信的问题，具体在**ServiceDispatcher.InnerConnection**方法中实现，ServiceDispatcher**是LoadedApk的内部类**，接下来解析ServiceDispatcher.InnerConnection的**connected**方法
+
+```java
+public void connected(ComponentName name, IBinder service, boolean dead) throws RemoteException {
+                LoadedApk.ServiceDispatcher sd = mDispatcher.get();
+                if (sd != null) {
+                    sd.connected(name, service, dead);
+                }
+}
+```
+
+这个方法调用了**ServiceDispatcher类型的sd变量的connected方法**
+
+```java
+ public void connected(ComponentName name, IBinder service, boolean dead) {
+            if (mActivityThread != null) {
+                mActivityThread.post(new RunConnection(name, service, 0, dead));
+            } else {
+                doConnected(name, service, dead);
+            }
+}
+```
+
+**mActivityThread**是Handler类型，其实就是H类，通过调用H类的post方法将**RunConnection**对象的内容运行在主线程中，RunConnection是LoadedApk的内部类
+
+```java
+private final class RunConnection implements Runnable {
+            RunConnection(ComponentName name, IBinder service, int command, boolean dead) {
+                mName = name;
+                mService = service;
+                mCommand = command;
+                mDead = dead;
+            }
+
+            public void run() {
+                if (mCommand == 0) {
+                    doConnected(mName, mService, mDead);
+                } else if (mCommand == 1) {
+                    doDeath(mName, mService);
+                }
+            }
+
+            final ComponentName mName;
+            final IBinder mService;
+            final int mCommand;
+            final boolean mDead;
+}
+```
+
+RunConnection的**run**方法中调用了**doConnected**来进行绑定，doConnected方法在最后调用了**ServiceConnection.onServiceConnected**方法
+
+```java
+ mConnection.onServiceConnected(name, service);
+```
+
+执行到这里的时候，在客户端实现了ServiceConnection接口类的onServiceConnected方法会被执行，到此为止，Service完成了绑定
