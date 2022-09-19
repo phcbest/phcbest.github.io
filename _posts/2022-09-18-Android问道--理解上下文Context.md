@@ -55,3 +55,42 @@ Context的关联类采用了装饰模式，主要有以下优点
 
 为了理解Context的关联类的设计理念，需要理解Application,Activity,Service的Context创建过程
 
+# ApplicationContext的创建过程
+
+我们通常使用**getApplicationContext**方法来获取应用程序全局的ApplicationContxt
+
+在应用程序启动完成后，应用程序就会有一个全局的ApplicationContext
+
+创建过程的时序图如下
+
+```mermaid
+sequenceDiagram
+	调用 ->> ApplicationThread : scheduleLauncherActivity
+	activate ApplicationThread
+	ApplicationThread ->> ActivityThread : sendMessage
+	deactivate ApplicationThread 
+	activate ActivityThread
+	ActivityThread ->> H : handleMessage
+	deactivate ActivityThread
+	activate H
+	H ->> ActivityThread : handleLauncherActivity
+	deactivate H
+	activate ActivityThread
+	ActivityThread ->> ActivityThread : performLauncherActivity
+	ActivityThread ->> LoadedApk : makeApplication
+	deactivate ActivityThread
+	activate LoadedApk
+	LoadedApk ->> Instrumentation : newApplication
+	deactivate LoadedApk
+	activate Instrumentation
+	Instrumentation ->> Application : attach
+	deactivate Instrumentation
+	activate Application
+	Application ->> ContextWrapper : attachBaseContext
+	deactivate Application
+	activate ContextWrapper
+	deactivate ContextWrapper
+```
+
+ActivityThread作为应用程序进程的主线程管理类，会调用其内部类ApplicationThread的scheduleLauncherActivity方法来启动Activity
+
