@@ -92,5 +92,30 @@ sequenceDiagram
 	deactivate ContextWrapper
 ```
 
-ActivityThread作为应用程序进程的主线程管理类，会调用其内部类ApplicationThread的scheduleLauncherActivity方法来启动Activity
+ActivityThread作为应用程序进程的主线程管理类，会调用其内部类ApplicationThread的**scheduleLauncherActivity**方法来启动Activity
 
+在scheduleLauncherActivity方法中执行了以下代码
+
+```java
+sendMessage(H.LAUNCH_ACTIVITY, r);
+```
+
+ApplicationThread的**scheduleLauncherActivity**方法中向着H类发送了**LAUNCH_ACTIVITY**类型的消息，目的是将启动的Activity的逻辑
+
+放在主线程的消息队列中，**这样启动Activity的逻辑会在主线程中执行**
+
+H类的**handleMessage**方法中接收消息，接收到**LAUNCH_ACTIVITY**类型的消息会执行
+
+```java
+case LAUNCH_ACTIVITY: {
+    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "activityStart");
+    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;
+    //
+	r.packageInfo = getPackageInfoNoCheck(r.activityInfo.applicationInfo, r.compatInfo);
+    //
+	handleLaunchActivity(r, null, "LAUNCH_ACTIVITY");
+	Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+}
+```
+
+H类继承于Handler是ActivityThread的内部类，通过getPackageInfoNoCheck方法来获得**LoadedApk**类型的对象，并将该对象赋值给了**ActivityClientRecord**的**packageInfo**变量， LoadedApk是用来描述已加载的APK文件
