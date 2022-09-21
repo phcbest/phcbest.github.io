@@ -119,3 +119,18 @@ case LAUNCH_ACTIVITY: {
 ```
 
 H类继承于Handler是ActivityThread的内部类，通过getPackageInfoNoCheck方法来获得**LoadedApk**类型的对象，并将该对象赋值给了**ActivityClientRecord**的**packageInfo**变量， LoadedApk是用来描述已加载的APK文件
+
+之后调用了**ActivityThread.handleLaunchActivity**方法
+
+```java
+Activity a = performLaunchActivity(r, customIntent);
+```
+
+handleLaunchActivity又调用了**performLaunchActivity**方法，获得了一个Activity对象
+
+```java
+Application app = r.packageInfo.makeApplication(false, mInstrumentation);
+```
+
+在performLaunchActivity方法中有很多重要逻辑，和Context相关的逻辑就是调用了**ActivityClientRecord**类型的r对象的成员变量**packageInfo**的**makeApplication**方法，packageInfo是LoadedApk类型
+
