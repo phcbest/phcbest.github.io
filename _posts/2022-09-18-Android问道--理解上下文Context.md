@@ -55,7 +55,7 @@ Context的关联类采用了装饰模式，主要有以下优点
 
 为了理解Context的关联类的设计理念，需要理解Application,Activity,Service的Context创建过程
 
-# ApplicationContext的创建过程
+# Application Context的创建过程
 
 我们通常使用**getApplicationContext**方法来获取应用程序全局的ApplicationContxt
 
@@ -132,5 +132,120 @@ handleLaunchActivity又调用了**performLaunchActivity**方法，获得了一�
 Application app = r.packageInfo.makeApplication(false, mInstrumentation);
 ```
 
-在performLaunchActivity方法中有很多重要逻辑，和Context相关的逻辑就是调用了**ActivityClientRecord**类型的r对象的成员变量**packageInfo**的**makeApplication**方法，packageInfo是LoadedApk类型
+在performLaunchActivity方法中有很多重要逻辑，和Context相关的逻辑就是调用了**ActivityClientRecord**类型的r对象的成员变量**packageInfo**的**makeApplication**方法，packageInfo是LoadedApk类型，接下来来到**LoadedApk.makeApplication**方法中
 
+- 判断mApplication变量是否为空（也就是是否第一次启动），如果不为空就返回mApplication变量，为空就继续向下执行
+
+  ```java
+  if (mApplication != null) {
+  	return mApplication;
+  }
+  ```
+
+- 使用ContextImpl的createAppContext方法创建ContextImpl
+
+  ```java
+  ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);
+  ```
+
+- 创建Application
+
+  ```java
+  app = mActivityThread.mInstrumentation.newApplication(cl, appClass, appContext);
+  ```
+
+- 设置ContextImpl的context类型的mOuterContext变量为之前创建的Application类型app对象，**让ContextImpl保持对Application的引用**
+
+  ```java
+  appContext.setOuterContext(app);
+  ```
+
+- 将创建Application对象app保存为LoadedApk的成员变量mApplication，用来表示ApplicationContext
+
+  ```java
+  mApplication = app;
+  ```
+
+**接下来来到Instrumentation的newApplication方法**，该方法有两个重载方法
+
+```java
+public Application newApplication(ClassLoader cl, String className, Context context)
+            throws InstantiationException, IllegalAccessException, 
+            ClassNotFoundException {
+		//使用传递进来的类加载器，加载className参数的类然后将该类和context作为参数传递到下一个重载方法
+        return newApplication(cl.loadClass(className), context);
+    }
+
+static public Application newApplication(Class<?> clazz, Context context)
+            throws InstantiationException, IllegalAccessException, 
+            ClassNotFoundException {
+        //实例化加载器生成的类，并强制转换为Application类型
+        Application app = (Application)clazz.newInstance();
+		//将ContextImpl传进去
+        app.attach(context);
+        return app;
+    }
+```
+
+调用了Application的attach方法，并将ContextImpl作为参数传递进去
+
+```java
+final void attach(Context context) {
+        attachBaseContext(context);
+        mLoadedApk = ContextImpl.getImpl(context).mPackageInfo;
+    }
+```
+
+在Application.attach方法中调用了**attachBaseContext**方法，**该方法在Application的父类ContextWrapper类中实现**
+
+```java
+protected void attachBaseContext(Context base) {
+        if (mBase != null) {
+            throw new IllegalStateException("Base context already set");
+        }
+        mBase = base;
+    }
+```
+
+base指的就是ContextImpl，是Context的实现类
+
+将ContextImpl赋值给ContextWrapper的成员变量**mBase**，这样就可以在ContextWrapper中使用Context的方法
+
+Application继承于ContextWrapper，同样也可以使用Context方法
+
+Application的attach方法的作用就是使Application可以使用Context方法，这样Application可以用来代表ApplicationContext
+
+# Application Context的获取过程
+
+我们已经了解了Application Context的创建过程，其获取过程也很好理解
+
+我们使用**getApplicationContext**方法来获得Application Context ，该方法在**ContextWrapper**中实现
+
+```java
+@Override
+public Context getApplicationContext() {
+        return mBase.getApplicationContext();
+    }
+```
+
+base是ContextImpl，我们来到**ContextImpl.getApplicationContext**方法中
+
+```java
+@Override
+public Context getApplicationContext() {
+        return (mPackageInfo != null) ?
+                mPackageInfo.getApplication() : mMainThread.getApplication();
+    }
+```
+
+如果LoadedApk类型的mPackageInfo对象不null，那就返回**LoadedApk.getApplication**，不然返回**ActivityThread.getApplication**
+
+由于程序已经启动了，LoadedApk不会为null，所以调用了`LoadedApk.getApplication()`方法
+
+```java
+Application getApplication() {
+        return mApplication;
+    }
+```
+
+**该方法返回了之前makeApplication方法中赋值了Context的全局变量mApplication**，于是便获得了Context
