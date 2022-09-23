@@ -249,3 +249,64 @@ Application getApplication() {
 ```
 
 **该方法返回了之前makeApplication方法中赋值了Context的全局变量mApplication**，于是便获得了Context
+
+# Activity Context的创建过程
+
+想要在Activity中使用Context提供的方法，首先需要创建Context，Activity的Context会在Activity启动的过程中被创建
+
+*Activity的Context创建的时序图*
+
+```mermaid
+sequenceDiagram
+	调用 ->> ApplicationThread : scheduleLaunchActivity
+	activate ApplicationThread
+	ApplicationThread ->> ActivityThread : sendMessage
+	deactivate ApplicationThread
+	activate ActivityThread 
+	ActivityThread ->> H : handleMessage
+	deactivate ActivityThread
+	activate H
+	H ->> ActivityThread : handleLaunchActivity
+	deactivate H
+	activate ActivityThread
+	ActivityThread ->> ActivityThread : proformLaunchActivity 
+	ActivityThread ->> Activity : attach
+	deactivate ActivityThread
+	activate Activity
+	Activity ->> ContextThemeWrapper : attachBaseContext
+	deactivate Activity
+	activate ContextThemeWrapper
+	ContextThemeWrapper ->> ContextWrapper : attachBaseContext
+	deactivate ContextThemeWrapper
+	activate ContextWrapper
+	deactivate ContextWrapper
+```
+
+ActivityThread是应用程序进程的主线程管理类，其内部类ApplicationThread会**调用scheduleLaunchActivity方法来启动Activity**
+
+- **scheduleLaunchActivity**方法将启动Activity的参数封装为**ActivityClientRecord**对象
+
+  ```java
+  ActivityClientRecord r = new ActivityClientRecord();
+  ```
+
+- 使用**sendMessage**向H类发送**H.LAUNCH_ACTIVITY**类型的消息，并且将ActivityClientRecord对象传进去
+
+  ```java
+  sendMessage(H.LAUNCH_ACTIVITY, r);
+  ```
+
+  该方法的主要目的是将启动Activity的逻辑放在主线程中执行
+
+  H类的**HandleMessgae**方法会对**LAUNCH_ACTIVITY**类型的消息进行处理，消息处理时的调用链为
+
+  ```mermaid
+  flowchart LR
+  	H.handleMessage --> ActivityThread.handleLaunchActivity
+  	ActivityThread.handleLaunchActivity --> ActivityThread.performLaunchActivity
+  ```
+
+接下来来到**ActivityThread.performLaunchActivity**方法
+
+
+
