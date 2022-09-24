@@ -308,5 +308,38 @@ ActivityThread是应用程序进程的主线程管理类，其内部类Applicati
 
 接下来来到**ActivityThread.performLaunchActivity**方法
 
+- 使用**createBaseContextForActivity**方法创建Activity的ContextImpl
 
+  ```java
+  ContextImpl appContext = createBaseContextForActivity(r);
+  ```
+
+- 创建Activity的实例
+
+  ```java
+  activity = mInstrumentation.newActivity(cl, component.getClassName(), r.intent);
+  ```
+
+- 将创建的Activity设置给ContextImpl的**mOuterContext**变量，让ContextImpl也有访问Activity的能力
+
+  ```java
+  appContext.setOuterContext(activity);
+  ```
+
+- 将ContextImpl传入Activity的attach方法
+
+  ```java
+  activity.attach(appContext, this, getInstrumentation(), r.token,
+                          r.ident, app, r.intent, r.activityInfo, title, r.parent,
+                          r.embeddedID, r.lastNonConfigurationInstances, config,
+                          r.referrer, r.voiceInteractor, window, r.configCallback);
+  ```
+
+- 调用mInstrumentation的callActivityOnCreate方法从而调用Activity的Create方法
+
+  ```java
+  mInstrumentation.callActivityOnCreate(activity, r.state, r.persistentState);
+  ```
+
+查看**performLaunchActivity方法中创建Activity的ContextImpl的createBaseContextForActivity**方法
 
