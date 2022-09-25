@@ -341,5 +341,85 @@ ActivityThread是应用程序进程的主线程管理类，其内部类Applicati
   mInstrumentation.callActivityOnCreate(activity, r.state, r.persistentState);
   ```
 
-查看**performLaunchActivity方法中创建Activity的ContextImpl的createBaseContextForActivity**方法
+查看**performLaunchActivity方法中创建Activity的ContextImpl的createBaseContextForActivity**方法发现，该方法调用了ContextImpl的**createActivityContext**方法来创建ContextImpl
 
+```java
+ ContextImpl appContext = ContextImpl.createActivityContext(
+                this, r.packageInfo, r.activityInfo, r.token, displayId, r.overrideConfig);
+```
+
+接下来回到performLaunchActivity方法中的**调用activity.attach方法**
+
+- 调用**attachBaseContext**方法，该方法在**ContextThemeWrapper**中实现
+
+  ```java
+  attachBaseContext(context);
+  ```
+
+- 创建PhoneWindow，也就是应用程序窗口，PhoneWindow在运行的时候会间接触发很多事件，点击或屏幕焦点变化，这些事件需要转发给和PhoneWindow关联的Activity
+
+  ```java
+  mWindow = new PhoneWindow(this, window, activityConfigCallback);
+  ```
+
+- 将当前Activity通过**setCallback**设置给PhoneWindow
+
+  ```java
+  mWindow.setCallback(this);
+  ```
+
+- 为PhoneWindow设置WindowManager
+
+  ```java
+  mWindow.setWindowManager(
+                  (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),
+                  mToken, mComponent.flattenToString(),
+                  (info.flags & ActivityInfo.FLAG_HARDWARE_ACCELERATED) != 0);
+  ```
+
+- 获得WIndowManager并且赋值给Activity的成员变量**mWindowManager**
+
+  ```java
+  mWindowManager = mWindow.getWindowManager();
+  ```
+
+**接下来来到attachBaseContext方法中**，该方法调用的是**ContextThemeWrapper.attachBaseContext**
+
+```java
+@Override
+protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
+    }
+```
+
+这个方法调用的是其父类的同名方法
+
+```java
+protected void attachBaseContext(Context base) {
+        if (mBase != null) {
+            throw new IllegalStateException("Base context already set");
+        }
+        mBase = base;
+    }
+```
+
+这里的base就是一路传进来的Activity的ContextImpl
+
+赋值给了ContextWrapper的变量mBase，这样ContextWrapper的功能就可以交给ContextImpl来处理
+
+> 比如调用Activity的getResources方法，就是调用了ContextImpl的getResources方法
+>
+> ```java
+> @Override
+> public Resources getResources() {
+>         return mBase.getResources();
+>     }
+> ```
+
+ActivityContext的创建过程可以总结为以下几点
+
+1. 启动Activity的过程中创建ContextImpl
+2. 将创建的ContextImpl赋值给ContextWrapper的成员变量mBase
+3. Activity继承自ContextWrapper的子类ContextThemeWrapper，这样Activity中就可以使用Context中定义的方法
+
+# Service的Context创建过程
