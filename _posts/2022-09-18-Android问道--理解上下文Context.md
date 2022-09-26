@@ -423,3 +423,83 @@ ActivityContext的创建过程可以总结为以下几点
 3. Activity继承自ContextWrapper的子类ContextThemeWrapper，这样Activity中就可以使用Context中定义的方法
 
 # Service的Context创建过程
+
+Service的Context创建过程和Activity的创建过程类似，是在Service的启动过程中被创建，我们从**ActivityThread.ApplicationThread.scheduleCreateService**方法开始解析
+
+```java
+public final void scheduleCreateService(IBinder token,
+                ServiceInfo info, CompatibilityInfo compatInfo, int processState) {
+            updateProcessState(processState, false);
+            CreateServiceData s = new CreateServiceData();
+            s.token = token;
+            s.info = info;
+            s.compatInfo = compatInfo;
+            sendMessage(H.CREATE_SERVICE, s);
+        }
+```
+
+使用sendMessage方法向H类发送**CREATE_SERVICE**类型的消息，H类的**handleMessage**会对CREATE_SERVICE类型的消息进行处理
+
+```java
+case CREATE_SERVICE:
+                    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, ("serviceCreate: " + String.valueOf(msg.obj)));
+                    handleCreateService((CreateServiceData)msg.obj);
+                    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+                    break;
+```
+
+处理消息逻辑调用了`handleCreateService((CreateServiceData)msg.obj);`这个方法
+
+- 使用ContextImpl的CreateAppContext方法创建ContextImpl
+
+  ```java
+  ContextImpl context = ContextImpl.createAppContext(this, packageInfo);
+  ```
+
+- 将创建的ContextImpl传入service的attach方法中
+
+  ```java
+  service.attach(context, this, data.info.name, data.token, app,ActivityManager.getService());
+  ```
+
+**Service.attach**方法如下所示
+
+```java
+public final void attach(
+            Context context,
+            ActivityThread thread, String className, IBinder token,
+            Application application, Object activityManager) {
+    	//调用ContextWrapper的attachBaseContext方法
+        attachBaseContext(context);
+        mThread = thread;           // NOTE:  unused - remove?
+        mClassName = className;
+        mToken = token;
+        mApplication = application;
+        mActivityManager = (IActivityManager)activityManager;
+        mStartCompatibility = getApplicationInfo().targetSdkVersion
+                < Build.VERSION_CODES.ECLAIR;
+    }
+```
+
+在该方法中调用了**ContextWrapper**的**attachBaseContext**方法，如下所示
+
+```java
+protected void attachBaseContext(Context base) {
+        if (mBase != null) {
+            throw new IllegalStateException("Base context already set");
+        }
+        mBase = base;
+    }
+```
+
+这里的base是一直传进来的ContextImpl，将ContextImpl赋值给ContextWrapper的成员变量mBase，这样就可以在ContextWrapper中使用Context的方法，Service继承于ContextWrapper，也可以使用Context方法
+
+# 小结
+
+本篇文章学习了
+
+- Context的关联类
+- Application，Activity，Service的Context创建过程
+
+本篇文章让我更好地理解Context的关联类的设计理念
+
