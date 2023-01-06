@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Android自定义View的过程和应用
-tags: Androidd
+tags: Android
 ---
 
 # 自定义View的流程

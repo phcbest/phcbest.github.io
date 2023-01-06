@@ -1,7 +1,7 @@
 ---
 layout: article
 title: AndroidRenderScript的简单使用
-tags: Androidd
+tags: Android
 ---
 
 ## 配置环境
