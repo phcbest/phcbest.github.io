@@ -1,3 +1,9 @@
+---
+layout: article
+title: 记录一次ffmpeg-kit的本机编译
+tags: Android
+---
+
 ## 项目地址
 
 [ffmepg-kit](https://github.com/arthenica/ffmpeg-kit)是一个适用于移动端的ffmpeg框架
