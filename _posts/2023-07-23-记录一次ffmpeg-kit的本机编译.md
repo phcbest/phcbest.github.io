@@ -335,4 +335,17 @@ phc@phc-virtual-machine:~/AndroidSDK$ cp /home/phc/.android/debug.keystore .
 
 最后生成的aar路径在**prebuilt**文件夹下
 
+当然,可也直接使用**Android Studio**打开`/ffmpeg-kit/android`路径,基本上像个正常Android项目一样gradle打个assemble包就可以了,最后的aar在子项目`/ffmpeg-kit/android/ffmpe-kit-android-lib`**build**的**output**路径下
+
+最后注意一点,打出来的包需要依赖`Smart Exception `库,详情可看说明 https://github.com/tanersener/ffmpeg-kit/wiki/Smart-Exception-Dependency
+
+如果不添加依赖的话也是可以正常打包出来的,但是运行会报错,如果是MavenCenter的就不用,因为pom声明了依赖,AS自己会下载
+
+```
+java.lang.NoClassDefFoundError: Failed resolution of: Lcom/arthenica/smartexception/java/Exceptions;
+at com.arthenica.ffmpegkit.FFmpegKitConfig.(FFmpegKitConfig.java:90)
+```
+
+
+
 最后打出来的包和ffmpeg-kit-min-gpl的对比如下,体积还是减少了不少的,也能够满足项目需求![image-20230723130428956](https://raw.githubusercontent.com/phcbest/PicBed/main/img/image-20230723130428956.png)
