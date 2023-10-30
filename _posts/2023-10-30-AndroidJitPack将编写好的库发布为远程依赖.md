@@ -1,3 +1,9 @@
+---
+layout: article
+title: AndroidJitPack将编写好的库发布为远程依赖
+tags: Android
+---
+
 ## 发布流程
 
 ### 仓库地址
