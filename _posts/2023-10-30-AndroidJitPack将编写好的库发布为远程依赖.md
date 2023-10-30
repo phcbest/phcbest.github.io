@@ -13,7 +13,7 @@ tags: Android
 
 ### 特别感谢
 
-感谢Youtuber `@Mikes-Code` 制作的视频 [Publish Your Android Library (AAR) to JitPack.io Repository | Android Studio](https://www.youtube.com/watch?v=6XugK4Sin6w)
+感谢Youtuber `@Mikes-Code` 制作的视频 [Publish Your Android Library (AAR) to JitPack.io Repository \| Android Studio](https://www.youtube.com/watch?v=6XugK4Sin6w)
 
 ### 代码与库配置
 
