@@ -26,7 +26,7 @@ DSL即*domain-specific language*是在特定场景下的开发语言,与之对�
 
 ![image-20231113224506120](https://raw.githubusercontent.com/phcbest/PicBed/main/img/202311132245206.png)
 
-一步一步来,先不用管里面的Plugin文件,先修改build-logic的 ` settings.gradle.kts `文件
+一步一步来,先不用管里面的Plugin文件,先修改build-logic的 `settings.gradle.kts `文件
 
 ```kotlin
 dependencyResolutionManagement {
