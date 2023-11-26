@@ -80,3 +80,49 @@ navController.navigate(RouteConfig.MediaSelectPage)
 ```
 
 RouteConfig中的是变量,可以自己定义,就是String形态的路由键
+
+### 在页面跳转中添加动画
+
+通常来说Activity之间跳转都是可以设置动画的,NavigationCompose当然也可以,这是`2.7.0`版本的新特性
+
+在路由NavHost中定义路由动画即可,代码如下
+
+```kotlin
+composable(
+    "${RouteConfig.MediaSelectPage}/{mediaType}", arguments = listOf(navArgument("mediaType") { NavType.StringType }),
+    enterTransition = {
+        slideIntoContainer(
+            AnimatedContentTransitionScope.SlideDirection.Up,
+            animationSpec = tween(500)
+        )
+    },
+    exitTransition = {
+        slideOutOfContainer(
+            AnimatedContentTransitionScope.SlideDirection.Down,
+            animationSpec = tween(500)
+        )
+    }
+) {
+    val type = it.arguments?.getString("mediaType")
+    MediaPickerPage(navController, type?.toIntOrNull() ?: -1)
+}
+```
+
+该效果配置路由的进入和退出动画 `enterTransition` `exitTransition` 这些属性名都是自解释的,很好理解
+
+**有坑注意**
+
+**跳转的页面必须要有全屏的宽高,不然动画不会生效,比如我要跳转到MediaPickerPage这个Compose,我需要至少配置一个根组件宽高为填充满**
+
+```kotlin
+Box(modifier = Modifier.fillMaxSize())
+```
+
+不然的话**上级页面的退出动画只会执行一个Scale到1px的效果,不会按照目标页面的`enterTransition`来走**
+
+<img src="https://raw.githubusercontent.com/phcbest/PicBed/main/img/202311270006361.png" alt="image-20231127000622329" style="zoom: 33%;" />
+
+正确生效的应该是下面的截图这样的
+
+<img src="https://raw.githubusercontent.com/phcbest/PicBed/main/img/202311270009845.png" alt="image-20231127000952808" style="zoom:33%;" />
+
