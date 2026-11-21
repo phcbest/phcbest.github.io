@@ -1,3 +1,8 @@
 <!-- start custom article top snippet -->
 
+{%- if page.section == 'life' -%}
+  {%- include snippets/prepend-baseurl.html path='/life/' -%}
+  <p><a class="button button--secondary button--pill" href="{{ __return }}">返回生活与总结</a></p>
+{%- endif -%}
+
 <!-- end custom article top snippet -->

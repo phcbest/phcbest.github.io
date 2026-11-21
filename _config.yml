@@ -182,6 +182,11 @@ markdown    : kramdown
 highlighter : rouge
 permalink   : date
 
+collections:
+  life:
+    output: true
+    permalink: /life/:name.html
+
 exclude:
   - CHANGELOG.md
   - HOW_TO_RELEASE.md
@@ -213,6 +218,25 @@ defaults:
       show_edit_on_github: true
       show_subscribe: false
       pageview: true
+  - scope:
+      path: ""
+      type: life
+    values:
+      layout: article
+      section: life
+      sharing: false
+      license: false
+      aside:
+        toc: true
+      show_tags: false
+      show_edit_on_github: false
+      show_subscribe: false
+      sitemap: false
+  - scope:
+      path: life
+    values:
+      section: life
+      sitemap: false
 
 
 ## => Plugins

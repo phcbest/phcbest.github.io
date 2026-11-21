@@ -1,6 +1,12 @@
 window.TEXT_SEARCH_DATA={
+  {%- assign _collection_separator = '' -%}
   {%- for _collection in site.collections -%}
-    {%- unless forloop.first -%},{%- endunless -%}
+    {%- if include.section == 'life' -%}
+      {%- unless _collection.label == 'life' -%}{%- continue -%}{%- endunless -%}
+    {%- elsif _collection.label == 'life' -%}
+      {%- continue -%}
+    {%- endif -%}
+    {{ _collection_separator }}
     '{{ _collection.label }}':[
       {%- for _article in _collection.docs -%}
       {%- unless forloop.first -%},{%- endunless -%}
@@ -10,5 +16,6 @@ window.TEXT_SEARCH_DATA={
       'url':{{ _url | jsonify }}}
       {%- endfor -%}
     ]
+    {%- assign _collection_separator = ',' -%}
   {%- endfor -%}
 };

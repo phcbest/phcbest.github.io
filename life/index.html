@@ -1,0 +1,10 @@
+---
+layout: page
+title: 生活与总结
+permalink: /life/
+---
+
+{%- assign _life_articles = site.life | sort: 'date' | reverse -%}
+{%- include article-list.html articles=_life_articles type='item'
+  article_type='BlogPosting' show_excerpt=true show_readmore=true
+  show_info=true -%}

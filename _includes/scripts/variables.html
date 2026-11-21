@@ -1,7 +1,11 @@
 {%- include snippets/get-sources.html -%}
 {%- assign _sources = __return -%}
 
-{%- include snippets/get-nav-url.html path="/assets/search.js" -%}
+{%- if page.section == 'life' -%}
+  {%- include snippets/get-nav-url.html path="/life/search.js" -%}
+{%- else -%}
+  {%- include snippets/get-nav-url.html path="/assets/search.js" -%}
+{%- endif -%}
 {%- assign _paths_search_js = __return -%}
 
 <script>
